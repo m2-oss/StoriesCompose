@@ -39,8 +39,8 @@ internal fun Stepper(
         modifier = Modifier
             .fillMaxWidth()
             .height(storiesParams.progressBarHeight)
-            .padding(storiesParams.paddings),
-        horizontalArrangement = Arrangement.spacedBy(storiesParams.spacedByArrangement)
+            .padding(storiesParams.progressBarPaddings),
+        horizontalArrangement = Arrangement.spacedBy(storiesParams.progressBarSpacedByArrangement)
     ) {
         slides.forEach {
             LinearProgressIndicator(

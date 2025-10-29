@@ -4,6 +4,9 @@ import android.content.Context
 import ru.m2.squaremeter.stories.data.repository.StoriesShownRepositoryImpl
 import ru.m2.squaremeter.stories.domain.repository.StoriesShownRepository
 
+/**
+ * Factory for [StoriesShownRepository] creation, entry point to work with stories cache
+ */
 class StoriesShownRepositoryFactory private constructor() {
 
     companion object {

@@ -24,11 +24,13 @@ internal data class StoriesState(
                 story.copy(
                     shown = shownStory?.shown ?: false,
                     slides = story.slides.mapIndexed { index, slide ->
-                        // выбираем текущий слайд для просмотра
-                        // если сторис не просмотрена и не просмотрен ни один слайд
-                        // или сторис просмотрена - выбираем 1ый слайд
-                        // если сторис не просмотрена, но просмотрены слайды -
-                        // выбираем следующий непросмотренный слайд
+                        /**
+                        Choosing current slide for display
+                        The first slide will be chosen if:
+                        - Neither the story nor any slides are shown (for the first time)
+                        - The story is shown
+                        In case the story is shown partially - the next unshown slide will be chosen
+                         */
                         slide.copy(
                             current = index == if (shownStory == null || shownStory.shown) {
                                 0

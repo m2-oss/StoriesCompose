@@ -12,6 +12,13 @@ import ru.m2.squaremeter.stories.presentation.model.UiStoriesPreviewParams
 import ru.m2.squaremeter.stories.presentation.model.UiStoriesPreview
 import ru.m2.squaremeter.stories.presentation.util.Colors
 
+/**
+ * A simple horizontal list that displays preview of stories.
+ *
+ * @param stories List of basic data required for display.
+ * @param onClick Callback called in case of clicking on an item.
+ * @param storiesPreviewParams Optional parameters for UI customization.
+ */
 @Composable
 fun StoriesPreviewList(
     stories: List<UiStoriesPreview>,

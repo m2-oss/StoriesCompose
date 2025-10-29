@@ -76,7 +76,7 @@ internal fun HorizontalPagerContainer(
                 detectTapGestures(
                     onPress = {
                         tapInProgress.value = true
-                        // ждем tap up событие от пользователя, на результат не смотрим
+                        // waiting for user's tap-up event and ignoring the result
                         tryAwaitRelease()
                         tapInProgress.value = false
                     },
@@ -155,8 +155,11 @@ private fun HorizontalPagerContent(
     storiesParams: UiStoriesParams,
     content: @Composable BoxScope.(Int, Int, Dp) -> Unit
 ) {
-    // preloadedStoriesIndex - страница из pager'а для обработки, тк
-    // работает pre-fetcher (мб != видимой странице)
+    /**
+     * [preloadedStoriesIndex] is a [androidx.compose.foundation.pager.Pager]'s item to handle
+     * because of pre-fetching and it might diverse from the one visible on the screen
+     * @see <a href="https://issuetracker.google.com/issues/289088847">pre-fetching</a>
+      */
     val storyType = storiesTypes[preloadedStoriesIndex]
     if (storyType is StoriesType.Content) {
         val preloadedStory = storyType.content

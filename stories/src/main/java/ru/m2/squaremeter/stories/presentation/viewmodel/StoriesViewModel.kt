@@ -143,15 +143,12 @@ internal class StoriesViewModel(
                     slides.indexOfFirst { it.current }
                 val shownStory =
                     shownStories.find { it.storiesId == id }
-                // выбираем последний просмотренный слайд - необходимо для
-                // актуализации рамки на превью и при повторном просмотре
-                // если сторис не просмотрен ни один слайд (shownStory == null) -
-                // 1ый слайд
-                // если сторис текущий слайд больше последнего просмотренного ранее -
-                // текущий слайд
-                // если сторис текущий слайд меньше последнего просмотренного ранее -
-                // последний просмотренный, тк все слайды могут быть просмотрены,
-                // но пользователь переключится на предыдущие и выйдет
+                /**
+                Choosing the max shown slide index is necessary for border visibility on preview and next story's playback:
+                - if any slides of a story aren't shown ([ShownStories] == null) - the first slide will be chosen
+                - if current slide index is greater than current stored value ([ShownStories.maxShownSlideIndex]) - current slide will be chosen
+                - otherwise current stored value ([ShownStories.maxShownSlideIndex]) will be chosen as all the slides might be shown but user could return to previous ones
+                 */
                 val maxShownSlideIndex =
                     when {
                         shownStory == null -> 0
@@ -164,9 +161,9 @@ internal class StoriesViewModel(
                         ShownStories(
                             storiesId = id,
                             maxShownSlideIndex = maxShownSlideIndex,
-                            // сторис просмотрена, если она ранее уже была просмотрена
-                            // или последний просмотренный слайд ==
-                            // последнему слайду в сторис
+                            /**
+                            A story considers as a shown if it has already been or the current shown slide is the last one
+                             */
                             shown =
                                 shownStory?.shown == true ||
                                         maxShownSlideIndex == slides.lastIndex

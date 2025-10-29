@@ -26,6 +26,22 @@ import ru.m2.squaremeter.stories.presentation.util.Colors
 import ru.m2.squaremeter.stories.presentation.viewmodel.StoriesViewModel
 import ru.m2.squaremeter.stories.presentation.viewmodel.StoriesViewModelFactory
 
+/**
+ * A container creating base functionality for stories such as:
+ * taps and swipes, progress bar transition, storing/selecting slides to display logic.
+ * Note that UI display should be on user side.
+ * @param storiesId id determining which story will be displayed
+ * @param stories pairs of [storiesId] as a key and number of slides as a value.
+ * Eventually, size of keys equals to size of stories and values are size of slides in each of them.
+ * @param durationInSec display time for every slide of every story
+ * @param storiesParams UI customization
+ * @param onStoriesChanged callback when every story changes.
+ * Next story id and slide index will be sent.
+ * @param onFinished callback when the last story ends.
+ * @param content UI part of a slide of a story. The scope is to place components relative to the container.
+ * First arguments, story and slide current indexes, are to find current story,
+ * and the third one, progress bar height, is to place your content under it if necessary
+ */
 @Composable
 fun StoriesContainer(
     storiesId: String,
@@ -98,14 +114,18 @@ private fun StoriesContent(
                 StoriesType.Content(storiesState.currentStories)
             )
         )
-    // аналог pagerState.isScrollInProgress, сделан по 3 причинам:
-    // 1. isScrollInProgress периодически отрабатывает с задержкой
-    // 2. лишние вызовы onPaused() и onResumed()
-    // 2. синхронизация гонки состояний - финиша onPress у detectTapGestures
-    // и изменения currentPage пейджера на Fake сторис, для успешного закрытия экрана
+    /**
+     * similar to [PagerState.isScrollInProgress], there are 3 reasons for it:
+     * - [PagerState.isScrollInProgress] occasionally delays
+     * - excess [onPaused] and [onResumed] calls
+     * - resolves race condition between
+     * [ru.m2.squaremeter.stories.presentation.util.detectTapGestures] onPress
+     * and change [PagerState.currentPage] to [StoriesType.Fake]
+     * and therefore successfully finishes stories
+      */
     val tapInProgress = remember { mutableStateOf(false) }
 
-    // смена сторис, слайда при тапе, а также их запуск
+    // change and launch stories or slide with tap
     LaunchStoriesLaunchedEffect(
         storiesState,
         pagerState,
@@ -115,15 +135,13 @@ private fun StoriesContent(
         onResumed,
         onFinished
     )
-    // оповещение о смене сторис
+    // change stories observer
     StoriesChangedLaunchedEffect(storiesState, onStoriesChanged)
-    // закрытие сторис при тапе на последнем элементе
+    // close stories on last slide's tap
     CloseOnLastSlideTapLaunchedEffect(storiesState, onFinished)
-    // ставим на паузу, если открыт какой-нибудь диалог и фрагмен не в фокусе
+    // pause a story if the container fragment isn't focused (e.g. a dialog)
     WindowFocusLaunchedEffect(onResumed = onResumed, onPaused = onPaused)
-    // смена сторис при свайпе
-    // здесь не указан tapInProgress в качестве ключа тк он уже есть в LaunchStoriesLaunchedEffect
-    // и будет дублирование onFinished
+    // change stories during swipe
     SwipeStoriesLaunchedEffect(
         storiesState,
         pagerState,
@@ -199,8 +217,10 @@ private fun LaunchStoriesLaunchedEffect(
         storiesState.currentSlideIndex,
         tapInProgress.value
     ) {
-        // если сторис Fake, то: если пальцы пользователя отжаты - закрываем экран.
-        // также игнорируем смену сторис
+        /**
+         * If a story is [StoriesType.Fake] then ignores stories change.
+         * Also, if all fingers left the display (![tapInProgress]) then finish stories
+         */
         if (storiesTypes[pagerState.currentPage] is StoriesType.Fake) {
             if (!tapInProgress.value) {
                 onFinished()
@@ -229,14 +249,20 @@ private fun SwipeStoriesLaunchedEffect(
     onFinished: () -> Unit,
     onStoriesSet: (Int) -> Unit
 ) {
+    /**
+     * tapInProgress isn't a key here to not duplicate onFinished call
+     * @see [LaunchStoriesLaunchedEffect]
+     */
     LaunchedEffect(pagerState) {
         snapshotFlow {
             pagerState.currentPage
         }.collect {
-            // дублирование логики из-за гонки состояний onPress у detectTapGestures
-            // и изменения pagerState.currentPage
-            // если сторис Fake, то: если пальцы пользователя отжаты - закрываем экран.
-            // также игнорируем смену сторис
+            /**
+             * logic duplication because of race condition between
+             * onPress from [ru.m2.squaremeter.stories.presentation.util.detectTapGestures]
+             * and [PagerState.currentPage].
+             * If a story is [StoriesType.Fake] then ignores stories change. Also, if all fingers left the display (![tapInProgress]) then finish stories
+              */
             if (storiesTypes[it] is StoriesType.Fake) {
                 if (!tapInProgress.value) {
                     onFinished()
@@ -246,7 +272,9 @@ private fun SwipeStoriesLaunchedEffect(
             val contentStoriesIndex = storiesState.stories.indexOf(
                 (storiesTypes[it] as StoriesType.Content).content
             )
-            // вызывается для синхронизации стейта вм и pager'а
+            /**
+             * sync between [StoriesState] and [PagerState]
+             */
             onStoriesSet(contentStoriesIndex)
         }
     }
