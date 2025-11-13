@@ -12,6 +12,7 @@ appcompat = "1.7.1"
 material = "1.13.0"
 coilVersion = "3.3.0"
 composeViewmodelLifecycleVersion = "2.9.4"
+navigationCompose = "2.9.6"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -36,6 +37,7 @@ composeViewmodelLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-c
 coil = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilVersion" }
 coilOkHttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilVersion" }
 coilSvg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coilVersion" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

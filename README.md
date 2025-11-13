@@ -14,34 +14,69 @@ dependencies {
 
 ## How To Use
 
-To create preview list you need to add the code:
+To create a list ot preview data you need to add the code:
 ``` kotlin
-StoriesPreviewList(
-    stories = listOf(
-        UiStoriesPreview(
-            id = "id",
-            imageData = R.drawable.ic_launcher_background,
-            title = "title",
-            shown = false
-        )
+val STORIES_PREVIEW_LIST = listOf(
+    UiStoriesPreview(
+        id = "1",
+        imageData = R.drawable.ic_launcher_background,
+        title = "1",
+        shown = false
     ),
-    onClick = { clicked = true }
+    UiStoriesPreview(
+        id = "2",
+        imageData = R.drawable.ic_launcher_background,
+        title = "2",
+        shown = false
+    ),
+    UiStoriesPreview(
+        id = "3",
+        imageData = R.drawable.ic_launcher_background,
+        title = "3",
+        shown = false
+    )
 )
 ```
+
+
+To create preview list you need to add the code:
+``` kotlin
+@Composable
+fun PreviewList(previews: List<UiStoriesPreview>, onClick: (String) -> Unit) {
+    StoriesPreviewList(
+        stories = previews,
+        onClick = { onClick(it) }
+    )
+}
+```
 The result:
-<img width="1080" height="2340" alt="Screenshot_20251030_145303" src="https://github.com/user-attachments/assets/838e0b9d-628a-4dd8-a64a-ae7e6d3f8663" />
+<img width="360" height="780" alt="image" src="https://github.com/user-attachments/assets/1c0c6f33-0460-4492-b659-e2b307f7fb7d" />
 
 
 To create container for stories you need to add the code:
 ``` kotlin
-StoriesContainer(
-    storiesId = "id",
-    stories = mapOf("id" to 3),
-    durationInSec = 10,
-    onFinished = { clicked = false }
-) { stories, slide, progressBar ->
-    Box(modifier = Modifier.fillMaxSize().background(Color.LightGray))
+@Composable
+fun Container(previews: List<UiStoriesPreview>, storiesId: String, onFinished: () -> Unit) {
+    StoriesContainer(
+        storiesId = storiesId,
+        stories = buildMap {
+            val ids = previews.map { it.id }
+            ids.forEach {
+                put(it, SLIDES_COUNT)
+            }
+        },
+        durationInSec = STORIES_DURATION_SEC,
+        onFinished = onFinished
+    ) { stories, slide, progressBar ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.LightGray)
+        ) {
+            Text(text = "$stories, $slide", modifier = Modifier.align(Alignment.Center))
+        }
+    }
 }
 ```
 The result:
-<img width="1080" height="2340" alt="Screenshot_20251030_145425" src="https://github.com/user-attachments/assets/37d37fcd-d6db-4d4e-b42d-aee227929330" />
+<img width="360" height="780" alt="image" src="https://github.com/user-attachments/assets/91da11d6-ee7c-4bbf-ba60-e7d1bf906595" />
