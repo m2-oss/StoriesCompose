@@ -1,23 +1,20 @@
-package ru.m2.squaremeter.stories.presentation.viewmodel
+package ru.m2.squaremeter.stories.preview.presentation.viewmodel
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import ru.m2.squaremeter.stories.StoriesShownRepositoryFactory
+import ru.m2.squaremeter.stories.preview.presentation.model.UiStoriesPreview
 
-internal class StoriesViewModelFactory(
+internal class PreviewViewModelFactory(
     private val context: Context,
-    private val storiesId: String,
-    private val stories: Map<String, Int>,
-    private val durationInSec: Int
+    private val previews: List<UiStoriesPreview>
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-        StoriesViewModel(
-            stories,
-            storiesId,
-            durationInSec,
+        PreviewViewModel(
+            previews,
             StoriesShownRepositoryFactory.getInstance(context)
         ) as T
 }

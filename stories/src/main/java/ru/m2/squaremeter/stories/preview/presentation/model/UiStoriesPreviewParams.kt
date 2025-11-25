@@ -1,4 +1,4 @@
-package ru.m2.squaremeter.stories.presentation.model
+package ru.m2.squaremeter.stories.preview.presentation.model
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape

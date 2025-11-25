@@ -8,7 +8,7 @@ import java.io.Serializable
  * @param maxShownSlideIndex index of a slide which meets the next criteria:
  * - it must be the last shown as the next one should be displayed next time
  * - it must be the max one as user can return to the previous ones so it mustn't be decreased
- * @sample ru.m2.squaremeter.stories.presentation.viewmodel.StoriesViewModel.setStoriesShown
+ * @sample ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesViewModel.setStoriesShown
  */
 data class ShownStories(
     val storiesId: String,

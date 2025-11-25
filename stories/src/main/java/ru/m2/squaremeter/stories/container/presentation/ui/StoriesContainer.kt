@@ -1,4 +1,4 @@
-package ru.m2.squaremeter.stories.presentation.ui
+package ru.m2.squaremeter.stories.container.presentation.ui
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.pager.PagerState
@@ -17,14 +17,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ru.m2.squaremeter.stories.presentation.model.UiStoriesParams
-import ru.m2.squaremeter.stories.presentation.model.StoriesState
-import ru.m2.squaremeter.stories.presentation.model.StoriesType
-import ru.m2.squaremeter.stories.presentation.model.UiSlide
-import ru.m2.squaremeter.stories.presentation.model.UiStories
+import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
+import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesState
+import ru.m2.squaremeter.stories.container.presentation.model.StoriesType
+import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
+import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 import ru.m2.squaremeter.stories.presentation.util.Colors
-import ru.m2.squaremeter.stories.presentation.viewmodel.StoriesViewModel
-import ru.m2.squaremeter.stories.presentation.viewmodel.StoriesViewModelFactory
+import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesViewModel
+import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesViewModelFactory
 
 /**
  * A container creating base functionality for stories such as:
@@ -39,7 +39,7 @@ import ru.m2.squaremeter.stories.presentation.viewmodel.StoriesViewModelFactory
  * Next story id and slide index will be sent.
  * @param onFinished callback when the last story ends.
  * @param content UI part of a slide of a story. The scope is to place components relative to the container.
- * First arguments, story and slide current indexes, are to find current story,
+ * First arguments, story id and slide current index, are to find current story,
  * and the third one, progress bar height, is to place your content under it if necessary
  */
 @Composable
@@ -50,7 +50,7 @@ fun StoriesContainer(
     storiesParams: UiStoriesParams = UiStoriesParams(),
     onStoriesChanged: (String, Int) -> Unit = { _, _ -> },
     onFinished: () -> Unit = {},
-    content: @Composable BoxScope.(Int, Int, Dp) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp) -> Unit
 ) {
     MaterialTheme {
         val viewModel: StoriesViewModel = viewModel(
@@ -103,7 +103,7 @@ private fun StoriesContent(
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
-    content: @Composable BoxScope.(Int, Int, Dp) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp) -> Unit
 ) {
     if (storiesState.shownStories == null) return
     val storiesTypes = storiesState.stories.addFakeStories()
@@ -119,7 +119,7 @@ private fun StoriesContent(
      * - [PagerState.isScrollInProgress] occasionally delays
      * - excess [onPaused] and [onResumed] calls
      * - resolves race condition between
-     * [ru.m2.squaremeter.stories.presentation.util.detectTapGestures] onPress
+     * [ru.m2.squaremeter.stories.container.presentation.util.detectTapGestures] onPress
      * and change [PagerState.currentPage] to [StoriesType.Fake]
      * and therefore successfully finishes stories
       */
@@ -259,9 +259,10 @@ private fun SwipeStoriesLaunchedEffect(
         }.collect {
             /**
              * logic duplication because of race condition between
-             * onPress from [ru.m2.squaremeter.stories.presentation.util.detectTapGestures]
+             * onPress from [ru.m2.squaremeter.stories.container.presentation.util.detectTapGestures]
              * and [PagerState.currentPage].
-             * If a story is [StoriesType.Fake] then ignores stories change. Also, if all fingers left the display (![tapInProgress]) then finish stories
+             * If a story is [StoriesType.Fake] then ignores stories change.
+             * Also, if all fingers left the display (![tapInProgress]) then finish stories
               */
             if (storiesTypes[it] is StoriesType.Fake) {
                 if (!tapInProgress.value) {

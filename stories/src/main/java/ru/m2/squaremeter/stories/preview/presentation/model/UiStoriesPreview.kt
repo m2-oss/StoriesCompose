@@ -1,4 +1,4 @@
-package ru.m2.squaremeter.stories.presentation.model
+package ru.m2.squaremeter.stories.preview.presentation.model
 
 /**
  * Base data of story's preview, required for display.

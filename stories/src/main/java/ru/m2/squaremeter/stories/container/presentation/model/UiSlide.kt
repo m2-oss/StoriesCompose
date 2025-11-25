@@ -1,4 +1,4 @@
-package ru.m2.squaremeter.stories.presentation.model
+package ru.m2.squaremeter.stories.container.presentation.model
 
 internal data class UiSlide(
     val progressState: ProgressState = ProgressState.START,
