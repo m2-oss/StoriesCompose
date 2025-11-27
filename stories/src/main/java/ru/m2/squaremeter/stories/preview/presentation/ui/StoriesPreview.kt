@@ -1,4 +1,4 @@
-package ru.m2.squaremeter.stories.presentation.ui
+package ru.m2.squaremeter.stories.preview.presentation.ui
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,8 +20,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
-import ru.m2.squaremeter.stories.presentation.model.UiStoriesPreviewParams
-import ru.m2.squaremeter.stories.presentation.model.UiStoriesPreview
+import ru.m2.squaremeter.stories.preview.presentation.model.UiStoriesPreviewParams
+import ru.m2.squaremeter.stories.preview.presentation.model.UiStoriesPreview
 import ru.m2.squaremeter.stories.presentation.util.Colors
 
 @Composable

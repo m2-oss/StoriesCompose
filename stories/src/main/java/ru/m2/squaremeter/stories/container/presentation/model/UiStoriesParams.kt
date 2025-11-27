@@ -1,4 +1,4 @@
-package ru.m2.squaremeter.stories.presentation.model
+package ru.m2.squaremeter.stories.container.presentation.model
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import ru.m2.squaremeter.stories.presentation.ui.STEPPER_TRACK_COLOR
+import ru.m2.squaremeter.stories.container.presentation.ui.STEPPER_TRACK_COLOR
 import ru.m2.squaremeter.stories.presentation.util.Colors
 
 /**
@@ -15,16 +15,23 @@ import ru.m2.squaremeter.stories.presentation.util.Colors
 data class UiStoriesParams(
     /**
      * Considering status and navigation bar paddings. If set true, the space will be participating
-     * in swipes between stories
+     * in swipes between stories.
+     * IMPORTANT:
+     * 1. On older android platforms, don't forget to enable edge-to-edge mode in your activity, otherwise it doesn't work;
+     * 2. Use [slideBackground] to set the colors of status and navigation bar, otherwise default color will be used.
+     * @see <a href="https://developer.android.com/develop/ui/compose/system/setup-e2e">Edge-to-edge</a>
      */
-    val fullScreen: Boolean = true,
+    val fullScreen: Boolean = false,
     /**
      * Enabling 3d graphics transitions between stories. If set false, default behavior of swipes
      * will be used
+     * @see <a href="https://developer.android.com/develop/ui/compose/layouts/pager#horizontalpager">Default swipe behavior</a>
      */
     val graphicsTransition: Boolean = true,
     /**
-     * Enabling transparency to see the previous screen during stories being closed
+     * Enabling transparency of stories background. It helps see the previous screen during stories being closed.
+     * IMPORTANT: It's up to you to make the stories screen transparent. E.g. you can use FragmentTransaction's add function.
+     * @see <a href="https://developer.android.com/guide/fragments/transactions">Fragment transactions</a>
      */
     val transparentBackground: Boolean = false,
     /**
@@ -59,5 +66,5 @@ data class UiStoriesParams(
      * Color background of a slide. Comes in handy with [fullScreen] to fill the screen with color
      * and change during swipes
      */
-    val slideBackground: ((Int, Int) -> Color)? = null
+    val slideBackground: ((String, Int) -> Color)? = null
 )

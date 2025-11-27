@@ -1,6 +1,8 @@
-package ru.m2.squaremeter.stories.presentation.model
+package ru.m2.squaremeter.stories.container.presentation.viewmodel
 
 import ru.m2.squaremeter.stories.domain.entity.ShownStories
+import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
+import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 
 internal data class StoriesState(
     val duration: Int,
@@ -40,7 +42,7 @@ internal data class StoriesState(
                         )
                     }
                 )
-            },
+            }.sortedBy { it.shown },
             shownStories = shownStories
         )
 

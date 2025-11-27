@@ -1,4 +1,4 @@
-package ru.m2.squaremeter.stories.presentation.viewmodel
+package ru.m2.squaremeter.stories.container.presentation.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -10,11 +10,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
+import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 import ru.m2.squaremeter.stories.domain.entity.ShownStories
 import ru.m2.squaremeter.stories.domain.repository.StoriesShownRepository
-import ru.m2.squaremeter.stories.presentation.model.StoriesState
-import ru.m2.squaremeter.stories.presentation.model.UiSlide
-import ru.m2.squaremeter.stories.presentation.model.UiStories
 
 private const val LOG_TAG = "stories_lib_StoriesViewModel"
 

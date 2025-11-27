@@ -1,4 +1,4 @@
-package ru.m2.squaremeter.stories.presentation.ui
+package ru.m2.squaremeter.stories.container.presentation.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
@@ -29,13 +29,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import kotlinx.coroutines.launch
-import ru.m2.squaremeter.stories.presentation.model.UiStoriesParams
-import ru.m2.squaremeter.stories.presentation.model.StoriesState
-import ru.m2.squaremeter.stories.presentation.model.StoriesType
-import ru.m2.squaremeter.stories.presentation.model.UiSlide
-import ru.m2.squaremeter.stories.presentation.model.UiStories
+import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
+import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesState
+import ru.m2.squaremeter.stories.container.presentation.model.StoriesType
+import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
+import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 import ru.m2.squaremeter.stories.presentation.util.Colors
-import ru.m2.squaremeter.stories.presentation.util.detectTapGestures
+import ru.m2.squaremeter.stories.container.presentation.util.detectTapGestures
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
@@ -53,7 +53,7 @@ internal fun HorizontalPagerContainer(
     onFinished: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
-    content: @Composable BoxScope.(Int, Int, Dp) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp) -> Unit
 ) {
     val screenWidthPx = LocalWindowInfo.current.containerSize.width.toFloat()
     val screenHeightPx = LocalWindowInfo.current.containerSize.height.toFloat()
@@ -153,7 +153,7 @@ private fun HorizontalPagerContent(
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
-    content: @Composable BoxScope.(Int, Int, Dp) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp) -> Unit
 ) {
     /**
      * [preloadedStoriesIndex] is a [androidx.compose.foundation.pager.Pager]'s item to handle
@@ -174,7 +174,7 @@ private fun HorizontalPagerContent(
                     } else {
                         this.background(
                             storiesParams.slideBackground(
-                                preloadedStoriesIndex - 1,
+                                preloadedStory.id,
                                 preloadedSlideIndex
                             )
                         )
@@ -212,7 +212,7 @@ private fun HorizontalPagerContent(
                 }
         ) {
             content(
-                preloadedStoriesIndex - 1,
+                preloadedStory.id,
                 preloadedSlideIndex,
                 storiesParams.progressBarHeight
             )

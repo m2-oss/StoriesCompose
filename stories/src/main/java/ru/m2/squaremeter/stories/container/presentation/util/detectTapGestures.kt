@@ -1,4 +1,4 @@
-package ru.m2.squaremeter.stories.presentation.util
+package ru.m2.squaremeter.stories.container.presentation.util
 
 import androidx.compose.foundation.gestures.GestureCancellationException
 import androidx.compose.foundation.gestures.PressGestureScope
