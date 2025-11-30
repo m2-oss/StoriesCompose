@@ -313,7 +313,7 @@ private fun PreviewStoriesContent() {
                 )
             ),
             storiesId = ""
-        ).shownStories(emptySet()),
+        ).shownStories(emptyList()),
         onPaused = {},
         onResumed = {},
         onNext = {},

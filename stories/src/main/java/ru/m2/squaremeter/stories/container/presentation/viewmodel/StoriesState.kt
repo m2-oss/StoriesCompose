@@ -7,7 +7,7 @@ import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 internal data class StoriesState(
     val duration: Int,
     val stories: List<UiStories>,
-    val shownStories: Set<ShownStories>?
+    val shownStories: List<ShownStories>?
 ) {
 
     val currentStories get() = stories.first { it.current }
@@ -18,7 +18,7 @@ internal data class StoriesState(
     val slidesCount get() = slides.size
 
     fun shownStories(
-        shownStories: Set<ShownStories>
+        shownStories: List<ShownStories>
     ): StoriesState =
         copy(
             stories = stories.map { story ->

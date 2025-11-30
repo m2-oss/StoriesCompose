@@ -46,7 +46,7 @@ internal class StoriesViewModel(
     init {
         viewModelScope.launch(CoroutineExceptionHandler { _, throwable ->
             Log.e(LOG_TAG, "Failed loading shown stories", throwable)
-            mutableStateFlow.value = stateFlow.value.shownStories(emptySet())
+            mutableStateFlow.value = stateFlow.value.shownStories(emptyList())
         }) {
             val shownStories = withContext(Dispatchers.IO) {
                 storiesShownRepository.get()
@@ -157,15 +157,17 @@ internal class StoriesViewModel(
 
                 withContext(Dispatchers.IO) {
                     storiesShownRepository.set(
-                        ShownStories(
-                            storiesId = id,
-                            maxShownSlideIndex = maxShownSlideIndex,
-                            /**
-                            A story considers as a shown if it has already been or the current shown slide is the last one
-                             */
-                            shown =
-                                shownStory?.shown == true ||
-                                        maxShownSlideIndex == slides.lastIndex
+                        listOf(
+                            ShownStories(
+                                storiesId = id,
+                                maxShownSlideIndex = maxShownSlideIndex,
+                                /**
+                                A story considers as a shown if it has already been or the current shown slide is the last one
+                                 */
+                                shown =
+                                    shownStory?.shown == true ||
+                                            maxShownSlideIndex == slides.lastIndex
+                            )
                         )
                     )
                 }
