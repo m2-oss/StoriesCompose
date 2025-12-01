@@ -242,7 +242,7 @@ private fun HorizontalPagerContainerPreview() {
                 )
             ),
             storiesId = ""
-        ).shownStories(emptySet()),
+        ).shownStories(emptyList()),
         storiesTypes = listOf(
             StoriesType.Content(
                 UiStories(
