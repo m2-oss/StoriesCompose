@@ -8,7 +8,7 @@ A library to make your stories easy to create with Compose.
 
 ``` kotlin
 dependencies {
-  implementation("com.github.m2-oss:StoriesCompose:1.1.0")
+  implementation("com.github.m2-oss:StoriesCompose:1.1.1")
 }
 ```
 
