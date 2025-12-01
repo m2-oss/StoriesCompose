@@ -1,4 +1,4 @@
-package ru.m2.squaremeter.stories.presentation.viewmodel
+package ru.m2.squaremeter.stories.container.presentation.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -10,11 +10,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
+import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 import ru.m2.squaremeter.stories.domain.entity.ShownStories
 import ru.m2.squaremeter.stories.domain.repository.StoriesShownRepository
-import ru.m2.squaremeter.stories.presentation.model.StoriesState
-import ru.m2.squaremeter.stories.presentation.model.UiSlide
-import ru.m2.squaremeter.stories.presentation.model.UiStories
 
 private const val LOG_TAG = "stories_lib_StoriesViewModel"
 
@@ -47,7 +46,7 @@ internal class StoriesViewModel(
     init {
         viewModelScope.launch(CoroutineExceptionHandler { _, throwable ->
             Log.e(LOG_TAG, "Failed loading shown stories", throwable)
-            mutableStateFlow.value = stateFlow.value.shownStories(emptySet())
+            mutableStateFlow.value = stateFlow.value.shownStories(emptyList())
         }) {
             val shownStories = withContext(Dispatchers.IO) {
                 storiesShownRepository.get()
@@ -143,15 +142,12 @@ internal class StoriesViewModel(
                     slides.indexOfFirst { it.current }
                 val shownStory =
                     shownStories.find { it.storiesId == id }
-                // выбираем последний просмотренный слайд - необходимо для
-                // актуализации рамки на превью и при повторном просмотре
-                // если сторис не просмотрен ни один слайд (shownStory == null) -
-                // 1ый слайд
-                // если сторис текущий слайд больше последнего просмотренного ранее -
-                // текущий слайд
-                // если сторис текущий слайд меньше последнего просмотренного ранее -
-                // последний просмотренный, тк все слайды могут быть просмотрены,
-                // но пользователь переключится на предыдущие и выйдет
+                /**
+                Choosing the max shown slide index is necessary for border visibility on preview and next story's playback:
+                - if any slides of a story aren't shown ([ShownStories] == null) - the first slide will be chosen
+                - if current slide index is greater than current stored value ([ShownStories.maxShownSlideIndex]) - current slide will be chosen
+                - otherwise current stored value ([ShownStories.maxShownSlideIndex]) will be chosen as all the slides might be shown but user could return to previous ones
+                 */
                 val maxShownSlideIndex =
                     when {
                         shownStory == null -> 0
@@ -161,15 +157,17 @@ internal class StoriesViewModel(
 
                 withContext(Dispatchers.IO) {
                     storiesShownRepository.set(
-                        ShownStories(
-                            storiesId = id,
-                            maxShownSlideIndex = maxShownSlideIndex,
-                            // сторис просмотрена, если она ранее уже была просмотрена
-                            // или последний просмотренный слайд ==
-                            // последнему слайду в сторис
-                            shown =
-                                shownStory?.shown == true ||
-                                        maxShownSlideIndex == slides.lastIndex
+                        listOf(
+                            ShownStories(
+                                storiesId = id,
+                                maxShownSlideIndex = maxShownSlideIndex,
+                                /**
+                                A story considers as a shown if it has already been or the current shown slide is the last one
+                                 */
+                                shown =
+                                    shownStory?.shown == true ||
+                                            maxShownSlideIndex == slides.lastIndex
+                            )
                         )
                     )
                 }

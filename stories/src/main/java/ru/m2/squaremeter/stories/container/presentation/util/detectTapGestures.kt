@@ -1,4 +1,4 @@
-package ru.m2.squaremeter.stories.presentation.util
+package ru.m2.squaremeter.stories.container.presentation.util
 
 import androidx.compose.foundation.gestures.GestureCancellationException
 import androidx.compose.foundation.gestures.PressGestureScope
@@ -18,12 +18,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 
 /**
- * Своя реализация [androidx.compose.foundation.gestures.detectTapGestures], из изменений:
- * - добавлен параметр requireUnconsumed = false в `awaitFirstDown`, чтобы обрабатывался свайп
- * внутри свайпа (пока 1ый не кончился, делаем второй)
- * - удалены коллбэки `onDoubleTap`, `onLongPress` из-за ненадобности
- * - добавлен вызов `consumeUntilUp` при отмене события tap-up, чтобы при свайпах сохранялась
- * пауза, а после их окончания - воспроизведение
+ * Custom implementation of [androidx.compose.foundation.gestures.detectTapGestures].
+ * The changes are:
+ * - added `false` to [awaitFirstDown]'s requireUnconsumed parameter
+ * to handle "swipe-in-swipe" successfully
+ * (by default, after dragging for the first time the next drag ignores and swipe fails)
+ * - deleted useless [androidx.compose.foundation.gestures.detectTapGestures]'s onDoubleTap and onLongPress callbacks
+ * - added [consumeUntilUp] on tap-up event cancellation during swipes to keep stories pause and play state
  */
 internal suspend fun PointerInputScope.detectTapGestures(
     onPress: suspend PressGestureScope.(Offset) -> Unit = NoPressGesture,

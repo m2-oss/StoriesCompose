@@ -1,11 +1,13 @@
-package ru.m2.squaremeter.stories.presentation.model
+package ru.m2.squaremeter.stories.container.presentation.viewmodel
 
 import ru.m2.squaremeter.stories.domain.entity.ShownStories
+import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
+import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 
 internal data class StoriesState(
     val duration: Int,
     val stories: List<UiStories>,
-    val shownStories: Set<ShownStories>?
+    val shownStories: List<ShownStories>?
 ) {
 
     val currentStories get() = stories.first { it.current }
@@ -16,7 +18,7 @@ internal data class StoriesState(
     val slidesCount get() = slides.size
 
     fun shownStories(
-        shownStories: Set<ShownStories>
+        shownStories: List<ShownStories>
     ): StoriesState =
         copy(
             stories = stories.map { story ->
@@ -24,11 +26,13 @@ internal data class StoriesState(
                 story.copy(
                     shown = shownStory?.shown ?: false,
                     slides = story.slides.mapIndexed { index, slide ->
-                        // выбираем текущий слайд для просмотра
-                        // если сторис не просмотрена и не просмотрен ни один слайд
-                        // или сторис просмотрена - выбираем 1ый слайд
-                        // если сторис не просмотрена, но просмотрены слайды -
-                        // выбираем следующий непросмотренный слайд
+                        /**
+                        Choosing current slide for display
+                        The first slide will be chosen if:
+                        - Neither the story nor any slides are shown (for the first time)
+                        - The story is shown
+                        In case the story is shown partially - the next unshown slide will be chosen
+                         */
                         slide.copy(
                             current = index == if (shownStory == null || shownStory.shown) {
                                 0
@@ -38,7 +42,7 @@ internal data class StoriesState(
                         )
                     }
                 )
-            },
+            }.sortedBy { it.shown },
             shownStories = shownStories
         )
 

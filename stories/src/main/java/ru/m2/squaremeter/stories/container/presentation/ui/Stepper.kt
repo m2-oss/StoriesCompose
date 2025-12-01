@@ -1,4 +1,4 @@
-package ru.m2.squaremeter.stories.presentation.ui
+package ru.m2.squaremeter.stories.container.presentation.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -18,9 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import ru.m2.squaremeter.stories.presentation.model.UiStoriesParams
-import ru.m2.squaremeter.stories.presentation.model.UiSlide
-import ru.m2.squaremeter.stories.presentation.model.UiStories
+import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
+import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
 
 private const val INITIAL_ANIMATION_VALUE = 0f
 private const val TARGET_ANIMATION_VALUE = 1f
@@ -39,8 +38,8 @@ internal fun Stepper(
         modifier = Modifier
             .fillMaxWidth()
             .height(storiesParams.progressBarHeight)
-            .padding(storiesParams.paddings),
-        horizontalArrangement = Arrangement.spacedBy(storiesParams.spacedByArrangement)
+            .padding(storiesParams.progressBarPaddings),
+        horizontalArrangement = Arrangement.spacedBy(storiesParams.progressBarSpacedByArrangement)
     ) {
         slides.forEach {
             LinearProgressIndicator(
@@ -119,7 +118,7 @@ private fun Progress(
 private fun PreviewStepper() {
     Stepper(
         storiesIndex = 0,
-        slides = UiStories.NULL_OBJECT.slides,
+        slides = listOf(UiSlide(current = true, progress = 0.5f), UiSlide(), UiSlide()),
         duration = 10000,
         onNext = {},
         onProgress = {},
