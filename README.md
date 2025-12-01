@@ -8,7 +8,7 @@ A library to make your stories easy to create with Compose.
 
 ``` kotlin
 dependencies {
-  implementation("com.github.m2-oss:StoriesCompose:1.0.0")
+  implementation("com.github.m2-oss:StoriesCompose:1.1.0")
 }
 ```
 
@@ -50,6 +50,7 @@ fun PreviewList(previews: List<UiStoriesPreview>, onClick: (String) -> Unit) {
 }
 ```
 The result:
+
 <img width="360" height="780" alt="image" src="https://github.com/user-attachments/assets/1c0c6f33-0460-4492-b659-e2b307f7fb7d" />
 
 
@@ -79,4 +80,5 @@ fun Container(previews: List<UiStoriesPreview>, storiesId: String, onFinished: (
 }
 ```
 The result:
+
 <img width="360" height="780" alt="image" src="https://github.com/user-attachments/assets/91da11d6-ee7c-4bbf-ba60-e7d1bf906595" />
