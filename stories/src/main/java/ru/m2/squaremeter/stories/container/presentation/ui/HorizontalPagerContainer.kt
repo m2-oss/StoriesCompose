@@ -241,8 +241,9 @@ private fun HorizontalPagerContainerPreview() {
                     slides = listOf(UiSlide())
                 )
             ),
-            storiesId = ""
-        ).shownStories(emptyList()),
+            storiesId = "",
+            shownStories = emptyList()
+        ),
         storiesTypes = listOf(
             StoriesType.Content(
                 UiStories(

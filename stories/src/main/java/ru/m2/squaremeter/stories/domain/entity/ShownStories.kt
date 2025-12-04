@@ -1,7 +1,5 @@
 package ru.m2.squaremeter.stories.domain.entity
 
-import java.io.Serializable
-
 /**
  * Entity represents story's shown state info.
  * @param storiesId unique id of a story
@@ -14,9 +12,4 @@ data class ShownStories(
     val storiesId: String,
     val maxShownSlideIndex: Int,
     val shown: Boolean
-) : Serializable {
-    companion object {
-
-        private const val serialVersionUID: Long = 4535840374138443524L
-    }
-}
+)

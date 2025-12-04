@@ -17,23 +17,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
-import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesState
 import ru.m2.squaremeter.stories.container.presentation.model.StoriesType
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
-import ru.m2.squaremeter.stories.presentation.util.Colors
+import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesData
+import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
+import ru.m2.squaremeter.stories.container.presentation.viewmodel.ReadyState
+import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesState
 import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesViewModel
 import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesViewModelFactory
+import ru.m2.squaremeter.stories.presentation.util.Colors
 
 /**
  * A container creating base functionality for stories such as:
  * taps and swipes, progress bar transition, storing/selecting slides to display logic.
  * Note that UI display should be on user side.
- * @param storiesId id determining which story will be displayed
- * @param stories pairs of [storiesId] as a key and number of slides as a value.
- * Eventually, size of keys equals to size of stories and values are size of slides in each of them.
- * @param durationInSec display time for every slide of every story
+ * @param data Basic data required for stories playback
  * @param storiesParams UI customization
  * @param onStoriesChanged callback when every story changes.
  * Next story id and slide index will be sent.
@@ -44,9 +43,7 @@ import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesViewMod
  */
 @Composable
 fun StoriesContainer(
-    storiesId: String,
-    stories: Map<String, Int>,
-    durationInSec: Int,
+    data: UiStoriesData,
     storiesParams: UiStoriesParams = UiStoriesParams(),
     onStoriesChanged: (String, Int) -> Unit = { _, _ -> },
     onFinished: () -> Unit = {},
@@ -54,18 +51,16 @@ fun StoriesContainer(
 ) {
     MaterialTheme {
         val viewModel: StoriesViewModel = viewModel(
-            factory = StoriesViewModelFactory(
-                LocalContext.current,
-                storiesId,
-                stories,
-                durationInSec
-            )
+            factory = StoriesViewModelFactory(context = LocalContext.current, data = data)
         )
         val storiesState = viewModel.stateFlow.collectAsStateWithLifecycle().value
 
         StoriesContent(
             storiesState = storiesState,
-            onFinished = onFinished,
+            onFinished = {
+                viewModel.setIdle()
+                onFinished()
+            },
             onPaused = {
                 viewModel.setPaused()
             },
@@ -105,7 +100,14 @@ private fun StoriesContent(
     storiesParams: UiStoriesParams,
     content: @Composable BoxScope.(String, Int, Dp) -> Unit
 ) {
-    if (storiesState.shownStories == null) return
+    when (storiesState.ready) {
+        ReadyState.IDLE -> return
+        ReadyState.ERROR -> {
+            onFinished()
+            return
+        }
+        ReadyState.PLAY -> {}
+    }
     val storiesTypes = storiesState.stories.addFakeStories()
     val pagerState =
         rememberPagerState(
@@ -312,8 +314,9 @@ private fun PreviewStoriesContent() {
                     slides = listOf(UiSlide())
                 )
             ),
-            storiesId = ""
-        ).shownStories(emptyList()),
+            storiesId = "",
+            shownStories = emptyList()
+        ),
         onPaused = {},
         onResumed = {},
         onNext = {},
