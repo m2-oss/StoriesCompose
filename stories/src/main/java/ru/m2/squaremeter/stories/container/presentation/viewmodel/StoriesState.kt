@@ -5,9 +5,9 @@ import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 
 internal data class StoriesState(
-    val duration: Int,
-    val stories: List<UiStories>,
-    val shownStories: List<ShownStories>?
+    val duration: Int = 0,
+    val stories: List<UiStories> = emptyList(),
+    val ready: ReadyState = ReadyState.IDLE
 ) {
 
     val currentStories get() = stories.first { it.current }
@@ -16,35 +16,6 @@ internal data class StoriesState(
     val currentSlide get() = slides.first { it.current }
     val currentSlideIndex get() = slides.indexOfFirst { it.current }
     val slidesCount get() = slides.size
-
-    fun shownStories(
-        shownStories: List<ShownStories>
-    ): StoriesState =
-        copy(
-            stories = stories.map { story ->
-                val shownStory = shownStories.find { it.storiesId == story.id }
-                story.copy(
-                    shown = shownStory?.shown ?: false,
-                    slides = story.slides.mapIndexed { index, slide ->
-                        /**
-                        Choosing current slide for display
-                        The first slide will be chosen if:
-                        - Neither the story nor any slides are shown (for the first time)
-                        - The story is shown
-                        In case the story is shown partially - the next unshown slide will be chosen
-                         */
-                        slide.copy(
-                            current = index == if (shownStory == null || shownStory.shown) {
-                                0
-                            } else {
-                                shownStory.maxShownSlideIndex + 1
-                            }
-                        )
-                    }
-                )
-            }.sortedBy { it.shown },
-            shownStories = shownStories
-        )
 
     fun slide(newSlideIndex: Int): StoriesState =
         progress(
@@ -79,6 +50,9 @@ internal data class StoriesState(
 
     fun resume(progress: Float = currentSlide.progress): StoriesState =
         progress(progressState = UiSlide.ProgressState.RESUME, progress = progress)
+
+    fun ready(ready: ReadyState): StoriesState =
+        copy(ready = ready)
 
     private fun currentSlide(newCurrentIndex: Int): StoriesState =
         copy(
@@ -163,19 +137,39 @@ internal data class StoriesState(
         fun initial(
             durationInSec: Int,
             stories: List<UiStories>,
-            storiesId: String
+            storiesId: String,
+            shownStories: List<ShownStories>
         ): StoriesState =
             StoriesState(
                 duration = durationInSec * 1000,
-                stories = stories.map { uiStories ->
-                    uiStories.copy(
-                        slides = uiStories.slides.mapIndexed { slideIndex, uiSlide ->
-                            uiSlide.copy(current = slideIndex == 0)
+                stories = stories.map { story ->
+                    val shownStory = shownStories.find { it.storiesId == story.id }
+                    story.copy(
+                        shown = shownStory?.shown ?: false,
+                        slides = story.slides.mapIndexed { index, slide ->
+                            /**
+                            Choosing current slide for display
+                            The first slide will be chosen if:
+                            - Neither the story nor any slides are shown (for the first time)
+                            - The story is shown
+                            In case the story is shown partially - the next unshown slide will be chosen
+                             */
+                            slide.copy(
+                                current = index == if (shownStory == null || shownStory.shown) {
+                                    0
+                                } else {
+                                    shownStory.maxShownSlideIndex + 1
+                                }
+                            )
                         },
-                        current = uiStories.id == storiesId
+                        current = story.id == storiesId
                     )
-                },
-                shownStories = null
+                }.sortedBy { it.shown },
+                ready = ReadyState.PLAY
             )
     }
+}
+
+internal enum class ReadyState {
+    IDLE, PLAY, ERROR
 }

@@ -16,8 +16,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import ru.m2.squaremeter.stories.preview.presentation.model.UiStoriesPreview
+import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesData
 import ru.m2.squaremeter.stories.container.presentation.ui.StoriesContainer
+import ru.m2.squaremeter.stories.preview.presentation.model.UiStoriesPreviewData
 import ru.m2.squaremeter.stories.preview.presentation.ui.StoriesPreviewList
 import ru.m2.squaremeter.storiescompose.ui.theme.StoriesComposeTheme
 
@@ -38,7 +39,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Content(
-    previews: List<UiStoriesPreview>,
+    previews: List<UiStoriesPreviewData>,
     navController: NavHostController = rememberNavController()
 ) {
     NavHost(
@@ -71,7 +72,7 @@ fun Content(
 }
 
 @Composable
-fun PreviewList(previews: List<UiStoriesPreview>, onClick: (String) -> Unit) {
+fun PreviewList(previews: List<UiStoriesPreviewData>, onClick: (String) -> Unit) {
     StoriesPreviewList(
         previews = previews,
         onClick = { onClick(it) }
@@ -79,16 +80,18 @@ fun PreviewList(previews: List<UiStoriesPreview>, onClick: (String) -> Unit) {
 }
 
 @Composable
-fun Container(previews: List<UiStoriesPreview>, storiesId: String, onFinished: () -> Unit) {
+fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinished: () -> Unit) {
     StoriesContainer(
-        storiesId = storiesId,
-        stories = buildMap {
-            val ids = previews.map { it.id }
-            ids.forEach {
-                put(it, SLIDES_COUNT)
-            }
-        },
-        durationInSec = STORIES_DURATION_SEC,
+        data = UiStoriesData(
+            storiesId = storiesId,
+            stories = buildMap {
+                val ids = previews.map { it.id }
+                ids.forEach {
+                    put(it, SLIDES_COUNT)
+                }
+            },
+            durationInSec = STORIES_DURATION_SEC
+        ),
         onFinished = onFinished
     ) { stories, slide, progressBar ->
         Box(

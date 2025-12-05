@@ -5,16 +5,7 @@ internal data class UiStories(
     val slides: List<UiSlide>,
     val current: Boolean = false,
     val shown: Boolean = false
-) {
-
-    companion object {
-
-        val NULL_OBJECT = UiStories(
-            id = "",
-            slides = emptyList()
-        )
-    }
-}
+)
 
 internal sealed class StoriesType {
 

@@ -12,52 +12,53 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
+import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesData
 import ru.m2.squaremeter.stories.domain.entity.ShownStories
 import ru.m2.squaremeter.stories.domain.repository.StoriesShownRepository
 
 private const val LOG_TAG = "stories_lib_StoriesViewModel"
 
 internal class StoriesViewModel(
-    stories: Map<String, Int>,
-    storiesId: String,
-    durationInSec: Int,
+    data: UiStoriesData,
     private val storiesShownRepository: StoriesShownRepository
 ) : ViewModel() {
 
-    private val mutableStateFlow = MutableStateFlow(
-        StoriesState.initial(
-            durationInSec = durationInSec,
-            stories = stories.map { story ->
-                val uiSlides = mutableListOf<UiSlide>().apply {
-                    repeat(story.value) {
-                        add(UiSlide())
-                    }
-                }
-                UiStories(
-                    id = story.key,
-                    slides = uiSlides
-                )
-            },
-            storiesId = storiesId
-        )
-    )
+    private val mutableStateFlow = MutableStateFlow(StoriesState())
     val stateFlow: StateFlow<StoriesState> = mutableStateFlow.asStateFlow()
 
     init {
         viewModelScope.launch(CoroutineExceptionHandler { _, throwable ->
             Log.e(LOG_TAG, "Failed loading shown stories", throwable)
-            mutableStateFlow.value = stateFlow.value.shownStories(emptyList())
+            mutableStateFlow.value = stateFlow.value.ready(ReadyState.ERROR)
         }) {
             val shownStories = withContext(Dispatchers.IO) {
                 storiesShownRepository.get()
             }
-
-            mutableStateFlow.value = stateFlow.value.shownStories(shownStories)
+            mutableStateFlow.value = StoriesState.initial(
+                durationInSec = data.durationInSec,
+                stories = data.stories.map { story ->
+                    val uiSlides = mutableListOf<UiSlide>().apply {
+                        repeat(story.value) {
+                            add(UiSlide())
+                        }
+                    }
+                    UiStories(
+                        id = story.key,
+                        slides = uiSlides
+                    )
+                },
+                storiesId = data.storiesId,
+                shownStories = shownStories
+            )
         }
     }
 
     fun setFinish() {
         mutableStateFlow.value = stateFlow.value.finish()
+    }
+
+    fun setIdle() {
+        mutableStateFlow.value = stateFlow.value.ready(ReadyState.IDLE)
     }
 
     fun setNextSlide() {
@@ -142,6 +143,7 @@ internal class StoriesViewModel(
                     slides.indexOfFirst { it.current }
                 val shownStory =
                     shownStories.find { it.storiesId == id }
+
                 /**
                 Choosing the max shown slide index is necessary for border visibility on preview and next story's playback:
                 - if any slides of a story aren't shown ([ShownStories] == null) - the first slide will be chosen
