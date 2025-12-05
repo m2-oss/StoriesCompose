@@ -6,14 +6,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ru.m2.squaremeter.stories.preview.presentation.model.UiStoriesPreview
-import ru.m2.squaremeter.stories.preview.presentation.model.UiStoriesPreviewParams
 import ru.m2.squaremeter.stories.presentation.util.Colors
+import ru.m2.squaremeter.stories.preview.presentation.model.UiStoriesPreviewData
+import ru.m2.squaremeter.stories.preview.presentation.model.UiStoriesPreviewParams
 import ru.m2.squaremeter.stories.preview.presentation.viewmodel.PreviewViewModel
 import ru.m2.squaremeter.stories.preview.presentation.viewmodel.PreviewViewModelFactory
 
@@ -26,16 +27,16 @@ import ru.m2.squaremeter.stories.preview.presentation.viewmodel.PreviewViewModel
  */
 @Composable
 fun StoriesPreviewList(
-    previews: List<UiStoriesPreview>,
+    previews: List<UiStoriesPreviewData>,
     onClick: (String) -> Unit,
     storiesPreviewParams: UiStoriesPreviewParams = UiStoriesPreviewParams()
 ) {
     val viewModel: PreviewViewModel = viewModel(
-        factory = PreviewViewModelFactory(
-            context = LocalContext.current,
-            previews = previews
-        )
+        factory = PreviewViewModelFactory(context = LocalContext.current)
     )
+    LaunchedEffect(previews) {
+        viewModel.init(previews)
+    }
     val previewState = viewModel.stateFlow.collectAsStateWithLifecycle().value
     Row(
         modifier = Modifier
@@ -58,17 +59,15 @@ fun StoriesPreviewList(
 private fun PreviewStoriesPreviewList() {
     StoriesPreviewList(
         previews = listOf(
-            UiStoriesPreview(
+            UiStoriesPreviewData(
                 id = "id",
                 imageData = "",
-                title = "Title 1",
-                shown = false
+                title = "Title 1"
             ),
-            UiStoriesPreview(
+            UiStoriesPreviewData(
                 id = "id",
                 imageData = "",
-                title = "Title 2",
-                shown = true
+                title = "Title 2"
             )
         ),
         onClick = {}
