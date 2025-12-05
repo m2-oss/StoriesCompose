@@ -6,11 +6,9 @@ package ru.m2.squaremeter.stories.preview.presentation.model
  * @param id Unique identifier of each stories.
  * @param imageData Information about image. Could be external (url) or internal (file path) link.
  * @param title Name of the story.
- * @param shown Indicator whether the story was shown. Impacts on outer border visibility.
  */
-internal data class UiStoriesPreview(
+data class UiStoriesPreviewData(
     val id: String,
     val imageData: Any,
-    val title: String,
-    val shown: Boolean = false
+    val title: String
 )
