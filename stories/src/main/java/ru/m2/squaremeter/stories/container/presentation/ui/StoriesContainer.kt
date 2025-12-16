@@ -10,7 +10,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.tooling.preview.Preview
@@ -328,7 +327,7 @@ private fun PreviewStoriesContent() {
         onFinished = {},
         onStoriesChanged = { _, _ -> },
         onStoriesSet = {},
-        storiesParams = UiStoriesParams().copy(slideBackground = { _, _ -> Color.Black }),
+        storiesParams = UiStoriesParams(),
         content = { _, _, _ -> }
     )
 }
