@@ -51,8 +51,11 @@ fun StoriesContainer(
 ) {
     MaterialTheme {
         val viewModel: StoriesViewModel = viewModel(
-            factory = StoriesViewModelFactory(context = LocalContext.current, data = data)
+            factory = StoriesViewModelFactory(LocalContext.current)
         )
+        LaunchedEffect(data) {
+            viewModel.init(data)
+        }
         val storiesState = viewModel.stateFlow.collectAsStateWithLifecycle().value
 
         StoriesContent(

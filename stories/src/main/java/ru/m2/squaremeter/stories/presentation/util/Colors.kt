@@ -9,6 +9,4 @@ internal object Colors {
     val systemOnWhiteOrange = Color(0xFFFF784B)
     val systemOnWhiteStrong = Color(0xFF221F2E)
     val systemWhite = Color(0xFFFFFFFF)
-
-    val iconTintColor = Color(0xD1FFFFFF)
 }
