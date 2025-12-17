@@ -21,4 +21,7 @@ interface ShownStoriesDao {
 
     @Query("DELETE FROM ShownStories WHERE storiesId NOT IN (:ids)")
     fun actualize(ids: List<String>)
+
+    @Query("DELETE FROM ShownStories")
+    fun deleteAll()
 }

@@ -32,10 +32,11 @@ internal fun Stepper(
     duration: Int,
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
-    storiesParams: UiStoriesParams
+    storiesParams: UiStoriesParams,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(storiesParams.progressBarHeight)
             .padding(storiesParams.progressBarPaddings),

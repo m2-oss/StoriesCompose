@@ -12,7 +12,7 @@ interface StoriesShownRepository {
      * Putting shown stories into memory.
      * @param shownStories info about shown story
      */
-    suspend fun set(shownStories: List<ShownStories>)
+    fun set(shownStories: List<ShownStories>)
 
     /**
      * Observing (async operation) shown stories from memory.
@@ -26,7 +26,12 @@ interface StoriesShownRepository {
 
     /**
      * Updating info about shown stories by replacing old stories with new ones.
-     * @param storiesIds set of ids to retain in memory. If an element already exists in memory then nothing happens.
+     * @param storiesIds set of ids to retain in memory.
      */
     fun actualize(storiesIds: List<String>)
+
+    /**
+     * Deletes all shown stories' data from memory
+     */
+    fun deleteAll()
 }

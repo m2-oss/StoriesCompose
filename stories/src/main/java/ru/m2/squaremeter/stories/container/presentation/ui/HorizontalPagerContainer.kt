@@ -169,27 +169,6 @@ private fun HorizontalPagerContent(
             modifier = Modifier
                 .fillMaxSize()
                 .run {
-                    if (storiesParams.slideBackground == null) {
-                        this
-                    } else {
-                        this.background(
-                            storiesParams.slideBackground(
-                                preloadedStory.id,
-                                preloadedSlideIndex
-                            )
-                        )
-                    }
-                }
-                .run {
-                    if (storiesParams.fullScreen) {
-                        this
-                            .statusBarsPadding()
-                            .navigationBarsPadding()
-                    } else {
-                        this
-                    }
-                }
-                .run {
                     if (storiesParams.graphicsTransition) {
                         this.graphicsLayer {
                             val pageOffset =
@@ -217,6 +196,11 @@ private fun HorizontalPagerContent(
                 storiesParams.progressBarHeight
             )
             Stepper(
+                modifier = if (storiesParams.fullScreen) {
+                    Modifier.statusBarsPadding().navigationBarsPadding()
+                } else {
+                    Modifier
+                },
                 storiesIndex = preloadedStoriesIndex,
                 slides = preloadedStory.slides,
                 duration = duration,

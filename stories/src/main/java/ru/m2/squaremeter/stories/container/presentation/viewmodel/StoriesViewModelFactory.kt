@@ -4,17 +4,12 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import ru.m2.squaremeter.stories.StoriesShownRepositoryFactory
-import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesData
 
 internal class StoriesViewModelFactory(
-    private val context: Context,
-    private val data: UiStoriesData
+    private val context: Context
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-        StoriesViewModel(
-            data = data,
-            storiesShownRepository = StoriesShownRepositoryFactory.getInstance(context)
-        ) as T
+        StoriesViewModel(StoriesShownRepositoryFactory.getInstance(context)) as T
 }

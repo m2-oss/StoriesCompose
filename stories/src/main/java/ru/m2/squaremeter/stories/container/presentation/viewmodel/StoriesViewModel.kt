@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,14 +20,14 @@ import ru.m2.squaremeter.stories.domain.repository.StoriesShownRepository
 private const val LOG_TAG = "stories_lib_StoriesViewModel"
 
 internal class StoriesViewModel(
-    data: UiStoriesData,
     private val storiesShownRepository: StoriesShownRepository
 ) : ViewModel() {
 
+    private var currentJob: Job? = null
     private val mutableStateFlow = MutableStateFlow(StoriesState())
     val stateFlow: StateFlow<StoriesState> = mutableStateFlow.asStateFlow()
 
-    init {
+    fun init(data: UiStoriesData) {
         viewModelScope.launch(CoroutineExceptionHandler { _, throwable ->
             Log.e(LOG_TAG, "Failed loading shown stories", throwable)
             mutableStateFlow.value = stateFlow.value.ready(ReadyState.ERROR)
@@ -50,6 +51,13 @@ internal class StoriesViewModel(
                 storiesId = data.storiesId,
                 shownStories = shownStories
             )
+        }.also { job ->
+            currentJob?.let {
+                if (it.isActive) {
+                    it.cancel()
+                }
+            }
+            currentJob = job
         }
     }
 
