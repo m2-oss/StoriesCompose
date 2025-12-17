@@ -25,14 +25,14 @@ internal class PreviewViewModel(
     val stateFlow: StateFlow<PreviewState> = mutableStateFlow.asStateFlow()
 
     fun init(previewsData: List<UiStoriesPreviewData>) {
-        val previews = previewsData.map {
-            UiStoriesPreview(it.id, it.imageData, it.title)
-        }
         storiesShownRepository.observe()
             .flowOn(Dispatchers.IO)
             .map { shownStories ->
-                previews.map { story ->
-                    story.copy(
+                previewsData.map { story ->
+                    UiStoriesPreview(
+                        id = story.id,
+                        imageData = story.imageData,
+                        title = story.title,
                         shown = shownStories.any {
                             it.storiesId == story.id && it.shown
                         }

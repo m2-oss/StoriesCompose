@@ -11,7 +11,7 @@ internal class StoriesShownRepositoryImpl(db: StoriesDatabase) : StoriesShownRep
 
     private val shownStoriesDao by lazy { db.shownStoriesDao() }
 
-    override suspend fun set(shownStories: List<ShownStories>) {
+    override fun set(shownStories: List<ShownStories>) {
         shownStoriesDao.set(shownStories.map { it.map() })
     }
 
@@ -27,5 +27,9 @@ internal class StoriesShownRepositoryImpl(db: StoriesDatabase) : StoriesShownRep
 
     override fun actualize(storiesIds: List<String>) {
         shownStoriesDao.actualize(storiesIds)
+    }
+
+    override fun deleteAll() {
+        shownStoriesDao.deleteAll()
     }
 }

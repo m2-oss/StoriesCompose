@@ -14,11 +14,10 @@ import ru.m2.squaremeter.stories.presentation.util.Colors
  */
 data class UiStoriesParams(
     /**
-     * Considering status and navigation bar paddings. If set true, the space will be participating
-     * in swipes between stories.
+     * Considering status and navigation bar paddings for UI components.
      * IMPORTANT:
      * 1. On older android platforms, don't forget to enable edge-to-edge mode in your activity, otherwise it doesn't work;
-     * 2. Use [slideBackground] to set the colors of status and navigation bar, otherwise default color will be used.
+     * 2. This flag will set only library UI components to full screen mode. It's up to you to do the same with content on your side if necessary.
      * @see <a href="https://developer.android.com/develop/ui/compose/system/setup-e2e">Edge-to-edge</a>
      */
     val fullScreen: Boolean = false,
@@ -62,9 +61,4 @@ data class UiStoriesParams(
      * Color of each viewed progress bar item
      */
     val progressTrackColor: Color = STEPPER_TRACK_COLOR,
-    /**
-     * Color background of a slide. Comes in handy with [fullScreen] to fill the screen with color
-     * and change during swipes
-     */
-    val slideBackground: ((String, Int) -> Color)? = null
 )
