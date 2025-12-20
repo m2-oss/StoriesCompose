@@ -16,9 +16,11 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
@@ -64,13 +66,13 @@ internal fun HorizontalPagerContainer(
         state = pagerState,
         modifier = Modifier
             .fillMaxSize()
-            .run {
+            .background(
                 if (storiesParams.transparentBackground) {
-                    this
+                    Color.Transparent
                 } else {
-                    this.background(Color.Black)
+                    Color.Black
                 }
-            }
+            )
             .offset { IntOffset(0, offsetY.value.roundToInt()) }
             .pointerInput(Unit) {
                 detectTapGestures(
@@ -159,56 +161,117 @@ private fun HorizontalPagerContent(
      * [preloadedStoriesIndex] is a [androidx.compose.foundation.pager.Pager]'s item to handle
      * because of pre-fetching and it might diverse from the one visible on the screen
      * @see <a href="https://issuetracker.google.com/issues/289088847">pre-fetching</a>
-      */
+     */
     val storyType = storiesTypes[preloadedStoriesIndex]
     if (storyType is StoriesType.Content) {
         val preloadedStory = storyType.content
         val preloadedSlideIndex = preloadedStory.slides.indexOfFirst { it.current }
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .run {
-                    if (storiesParams.graphicsTransition) {
-                        this.graphicsLayer {
-                            val pageOffset =
-                                pagerState.getOffsetDistanceInPages(preloadedStoriesIndex)
-                            val offScreenRight = pageOffset > 0
-                            val interpolated =
-                                FastOutLinearInEasing.transform(pageOffset.absoluteValue)
-                            rotationY =
-                                interpolated *
-                                        if (offScreenRight) ROTATION_DEGREES else -ROTATION_DEGREES
-
-                            transformOrigin = TransformOrigin(
-                                pivotFractionX = if (offScreenRight) 0f else 1f,
-                                pivotFractionY = .5f
-                            )
-                        }
-                    } else {
-                        this
-                    }
-                }
-        ) {
-            content(
-                preloadedStory.id,
-                preloadedSlideIndex,
-                storiesParams.progressBarHeight
-            )
-            Stepper(
-                modifier = if (storiesParams.fullScreen) {
-                    Modifier.statusBarsPadding().navigationBarsPadding()
+        if (storiesParams.transparentBackground) {
+            var background by remember { mutableStateOf(Color.Black) }
+            background = run {
+                val pageOffset =
+                    pagerState.getOffsetDistanceInPages(preloadedStoriesIndex)
+                val offScreenRight = pageOffset > 0
+                val stories = storiesTypes.mapNotNull { (it as? StoriesType.Content)?.content }
+                val first = stories.indexOf(preloadedStory) == 0
+                val last = stories.indexOf(preloadedStory) == stories.lastIndex
+                if ((offScreenRight && first) || (!offScreenRight && last)) {
+                    Color.Transparent
                 } else {
-                    Modifier
-                },
-                storiesIndex = preloadedStoriesIndex,
-                slides = preloadedStory.slides,
-                duration = duration,
-                onNext = onNext,
-                onProgress = onProgress,
-                storiesParams = storiesParams
+                    Color.Black
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(background)
+            ) {
+                ContentContainer(
+                    preloadedStory,
+                    preloadedSlideIndex,
+                    pagerState,
+                    preloadedStoriesIndex,
+                    duration,
+                    onNext,
+                    onProgress,
+                    storiesParams,
+                    content
+                )
+            }
+        } else {
+            ContentContainer(
+                preloadedStory,
+                preloadedSlideIndex,
+                pagerState,
+                preloadedStoriesIndex,
+                duration,
+                onNext,
+                onProgress,
+                storiesParams,
+                content
             )
         }
+    }
+}
+
+@Composable
+private fun ContentContainer(
+    preloadedStory: UiStories,
+    preloadedSlideIndex: Int,
+    pagerState: PagerState,
+    preloadedStoriesIndex: Int,
+    duration: Int,
+    onNext: () -> Unit,
+    onProgress: (Float) -> Unit,
+    storiesParams: UiStoriesParams,
+    content: @Composable BoxScope.(String, Int, Dp) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .run {
+                if (storiesParams.graphicsTransition) {
+                    this.graphicsLayer {
+                        val pageOffset =
+                            pagerState.getOffsetDistanceInPages(preloadedStoriesIndex)
+                        val offScreenRight = pageOffset > 0
+                        val interpolated =
+                            FastOutLinearInEasing.transform(pageOffset.absoluteValue)
+                        rotationY =
+                            interpolated *
+                                    if (offScreenRight) ROTATION_DEGREES else -ROTATION_DEGREES
+
+                        transformOrigin = TransformOrigin(
+                            pivotFractionX = if (offScreenRight) 0f else 1f,
+                            pivotFractionY = .5f
+                        )
+                    }
+                } else {
+                    this
+                }
+            }
+    ) {
+        content(
+            preloadedStory.id,
+            preloadedSlideIndex,
+            storiesParams.progressBarHeight
+        )
+        Stepper(
+            modifier = if (storiesParams.fullScreen) {
+                Modifier
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+            } else {
+                Modifier
+            },
+            storiesIndex = preloadedStoriesIndex,
+            slides = preloadedStory.slides,
+            duration = duration,
+            onNext = onNext,
+            onProgress = onProgress,
+            storiesParams = storiesParams
+        )
     }
 }
 
