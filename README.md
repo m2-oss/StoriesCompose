@@ -2,7 +2,8 @@
 
 A library to make your stories easy to create with Compose.
 
-![42769f58e5732f5fbe2f700122427e9d](https://github.com/user-attachments/assets/ad9dfff9-93ce-4b91-87dc-1ed4f09e40ef)
+![m2 converted](https://github.com/user-attachments/assets/f3588e80-bd03-4856-935f-983929f3c7df)
+
 
 ## Setup
 
