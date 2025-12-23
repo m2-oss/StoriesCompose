@@ -1,6 +1,6 @@
 # Stories for Jetpack Compose
 
-A library to make your stories easy to create with Compose.
+A library to make your stories easy to create with Compose. All the logic about stories transitions and shown indicating is implemented. All you need is only to create UI components.
 
 ![m2 converted](https://github.com/user-attachments/assets/f3588e80-bd03-4856-935f-983929f3c7df)
 
@@ -111,3 +111,6 @@ The result:
 
 <img src="https://github.com/user-attachments/assets/cb6115dc-f3b3-4939-9999-20fcdae59d69" width="360" height="720">
 
+## Variability
+
+You can use either both or one of the components. In second case you need to synchronize stories shown indicator. To do so you need to use [the repository contract]([url](https://github.com/m2-oss/StoriesCompose/blob/master/stories/src/main/java/ru/m2/squaremeter/stories/domain/repository/StoriesShownRepository.kt)). Create the repo you can with [factory]([url](https://github.com/m2-oss/StoriesCompose/blob/master/stories/src/main/java/ru/m2/squaremeter/stories/StoriesShownRepositoryFactory.kt)). Keep in mind that the interaction is asynchronous so that it must be on worker thread otherwise an exception will be thrown.
