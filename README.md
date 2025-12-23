@@ -6,6 +6,19 @@ A library to make your stories easy to create with Compose.
 
 ## Setup
 
+Add this code:
+  - to your settings.gradle of the project:
+``` kotlin
+dependencyResolutionManagement {
+   repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+   repositories {
+       google()
+       mavenCentral()
+       maven { url = uri("https://jitpack.io") }
+   }
+}
+```
+  - to your build.gradle of the module of usage:
 ``` kotlin
 dependencies {
   implementation("com.github.m2-oss:StoriesCompose:1.2.1")
