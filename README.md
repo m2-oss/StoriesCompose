@@ -25,73 +25,88 @@ dependencies {
 }
 ```
 
-## How To Use
+## Quick Start
 
-To create a list ot preview data you need to add the code:
+To create a list of previews:
+  - prepare the data:
 ``` kotlin
 val STORIES_PREVIEW_LIST = listOf(
-    UiStoriesPreview(
-        id = "1",
-        imageData = R.drawable.ic_launcher_background,
-        title = "1",
-        shown = false
-    ),
-    UiStoriesPreview(
-        id = "2",
-        imageData = R.drawable.ic_launcher_background,
-        title = "2",
-        shown = false
-    ),
-    UiStoriesPreview(
-        id = "3",
-        imageData = R.drawable.ic_launcher_background,
-        title = "3",
-        shown = false
-    )
+   UiStoriesPreviewData(
+       id = "id1",
+       imageData = R.drawable.ic_launcher_background,
+       title = "1",
+   ),
+   UiStoriesPreviewData(
+       id = "id2",
+       imageData = R.drawable.ic_launcher_background,
+       title = "2",
+   ),
+   UiStoriesPreviewData(
+       id = "id3",
+       imageData = R.drawable.ic_launcher_background,
+       title = "3",
+   ),
+   UiStoriesPreviewData(
+       id = "id4",
+       imageData = R.drawable.ic_launcher_background,
+       title = "4",
+   )
 )
 ```
 
-
-To create preview list you need to add the code:
+  - create the list:
 ``` kotlin
-@Composable
-fun PreviewList(previews: List<UiStoriesPreview>, onClick: (String) -> Unit) {
-    StoriesPreviewList(
-        stories = previews,
-        onClick = { onClick(it) }
-    )
+StoriesPreviewList(
+   previews = STORIES_PREVIEW_LIST,
+   onClick = {
+       // your callback handle
+   }
+)
+```
+
+The result:
+
+<img src="https://github.com/user-attachments/assets/9ee54a7b-7462-4198-b04b-fb7a6c214ac9" width="360" height="780" />
+
+To create container for stories:
+  - prepare the data:
+``` kotlin
+private const val SLIDES_COUNT = 3
+private const val STORIES_DURATION_SEC = 10
+private val SLIDES_COLORS = listOf(
+   Color.LightGray,
+   Color.Gray,
+   Color.DarkGray
+)
+```    
+
+- create the container:
+``` kotlin
+StoriesContainer(
+   data = UiStoriesData(
+       storiesId = storiesId, // an id of story clicked before
+       stories = buildMap {
+           val ids = STORIES_PREVIEW_LIST.map { it.id }
+           ids.forEach {
+               put(it, SLIDES_COUNT)
+           }
+       },
+       durationInSec = STORIES_DURATION_SEC
+   ),
+   onFinished = {
+     // your callback handle
+   }
+) { stories, slide, progressBar ->
+   Box(
+       modifier = Modifier
+           .fillMaxSize()
+           .background(SLIDES_COLORS[slide])
+   ) {
+       Text(text = "$stories, $slide", modifier = Modifier.align(Alignment.Center))
+   }
 }
 ```
 The result:
 
-<img width="360" height="780" alt="image" src="https://github.com/user-attachments/assets/1c0c6f33-0460-4492-b659-e2b307f7fb7d" />
+<img src="https://github.com/user-attachments/assets/cb6115dc-f3b3-4939-9999-20fcdae59d69" width="360" height="720">
 
-
-To create container for stories you need to add the code:
-``` kotlin
-@Composable
-fun Container(previews: List<UiStoriesPreview>, storiesId: String, onFinished: () -> Unit) {
-    StoriesContainer(
-        storiesId = storiesId,
-        stories = buildMap {
-            val ids = previews.map { it.id }
-            ids.forEach {
-                put(it, SLIDES_COUNT)
-            }
-        },
-        durationInSec = STORIES_DURATION_SEC,
-        onFinished = onFinished
-    ) { stories, slide, progressBar ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.LightGray)
-        ) {
-            Text(text = "$stories, $slide", modifier = Modifier.align(Alignment.Center))
-        }
-    }
-}
-```
-The result:
-
-<img width="360" height="780" alt="image" src="https://github.com/user-attachments/assets/91da11d6-ee7c-4bbf-ba60-e7d1bf906595" />
