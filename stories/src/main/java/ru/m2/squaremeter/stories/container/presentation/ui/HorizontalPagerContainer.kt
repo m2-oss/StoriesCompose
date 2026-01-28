@@ -146,7 +146,6 @@ internal fun HorizontalPagerContainer(
             storiesTypes,
             pagerState,
             preloadedStoriesIndex,
-            storiesState.duration,
             onNext,
             onProgress,
             storiesParams,
@@ -200,7 +199,6 @@ private fun HorizontalPagerContent(
     storiesTypes: List<StoriesType>,
     pagerState: PagerState,
     preloadedStoriesIndex: Int,
-    duration: Int,
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
@@ -241,7 +239,6 @@ private fun HorizontalPagerContent(
                     preloadedSlideIndex,
                     pagerState,
                     preloadedStoriesIndex,
-                    duration,
                     onNext,
                     onProgress,
                     storiesParams,
@@ -254,7 +251,6 @@ private fun HorizontalPagerContent(
                 preloadedSlideIndex,
                 pagerState,
                 preloadedStoriesIndex,
-                duration,
                 onNext,
                 onProgress,
                 storiesParams,
@@ -270,7 +266,6 @@ private fun ContentContainer(
     preloadedSlideIndex: Int,
     pagerState: PagerState,
     preloadedStoriesIndex: Int,
-    duration: Int,
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
@@ -316,7 +311,6 @@ private fun ContentContainer(
             },
             storiesIndex = preloadedStoriesIndex,
             slides = preloadedStory.slides,
-            duration = duration,
             onNext = onNext,
             onProgress = onProgress,
             storiesParams = storiesParams
@@ -330,7 +324,6 @@ private fun HorizontalPagerContainerPreview() {
     HorizontalPagerContainer(
         pagerState = PagerState { 1 },
         storiesState = StoriesState.initial(
-            durationInSec = 10,
             stories = listOf(
                 UiStories(
                     id = "",

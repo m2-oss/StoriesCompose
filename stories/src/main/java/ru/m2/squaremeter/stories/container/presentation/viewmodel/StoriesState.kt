@@ -5,7 +5,6 @@ import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 
 internal data class StoriesState(
-    val duration: Int = 0,
     val stories: List<UiStories> = emptyList(),
     val ready: ReadyState = ReadyState.IDLE
 ) {
@@ -135,13 +134,11 @@ internal data class StoriesState(
     companion object {
 
         fun initial(
-            durationInSec: Int,
             stories: List<UiStories>,
             storiesId: String,
             shownStories: List<ShownStories>
         ): StoriesState =
             StoriesState(
-                duration = durationInSec * 1000,
                 stories = stories.map { story ->
                     val shownStory = shownStories.find { it.storiesId == story.id }
                     story.copy(

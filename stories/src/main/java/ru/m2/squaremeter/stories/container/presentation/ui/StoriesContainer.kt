@@ -309,7 +309,6 @@ private fun CloseOnLastSlideTapLaunchedEffect(
 private fun PreviewStoriesContent() {
     StoriesContent(
         storiesState = StoriesState.initial(
-            durationInSec = 10,
             stories = listOf(
                 UiStories(
                     id = "",

@@ -36,12 +36,9 @@ internal class StoriesViewModel(
                 storiesShownRepository.get()
             }
             mutableStateFlow.value = StoriesState.initial(
-                durationInSec = data.durationInSec,
                 stories = data.stories.map { story ->
-                    val uiSlides = mutableListOf<UiSlide>().apply {
-                        repeat(story.value) {
-                            add(UiSlide())
-                        }
+                    val uiSlides = story.value.map {
+                        UiSlide(duration = it.duration)
                     }
                     UiStories(
                         id = story.key,
