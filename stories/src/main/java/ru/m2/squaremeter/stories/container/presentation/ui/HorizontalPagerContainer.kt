@@ -5,6 +5,8 @@ import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -25,19 +27,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.util.fastAny
 import kotlinx.coroutines.launch
-import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
-import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesState
 import ru.m2.squaremeter.stories.container.presentation.model.StoriesType
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
-import ru.m2.squaremeter.stories.presentation.util.Colors
+import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
 import ru.m2.squaremeter.stories.container.presentation.util.detectTapGestures
+import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesState
+import ru.m2.squaremeter.stories.presentation.util.Colors
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
@@ -75,13 +79,23 @@ internal fun HorizontalPagerContainer(
             )
             .offset { IntOffset(0, offsetY.value.roundToInt()) }
             .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    tapInProgress.value = true
+                    var changedToUp = false
+                    while (!changedToUp) {
+                        val event = awaitPointerEvent()
+                        changedToUp = event.changes.fastAny {
+                            it.id == down.id && it.changedToUpIgnoreConsumed()
+                        }
+                        if (changedToUp) {
+                            tapInProgress.value = false
+                        }
+                    }
+                }
+            }
+            .pointerInput(Unit) {
                 detectTapGestures(
-                    onPress = {
-                        tapInProgress.value = true
-                        // waiting for user's tap-up event and ignoring the result
-                        tryAwaitRelease()
-                        tapInProgress.value = false
-                    },
                     onTap = { offset ->
                         if (offset.x < screenWidthPx / 2) {
                             onPrevious()
