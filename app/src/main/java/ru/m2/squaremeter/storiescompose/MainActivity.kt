@@ -5,16 +5,21 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -112,7 +117,20 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
                 painter = painterResource(R.drawable.ic_launcher_background),
                 contentDescription = null
             )
-            Text(text = "$stories, $slide", modifier = Modifier.align(Alignment.Center))
+            Text(
+                text = "$stories, $slide",
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .clickable {}
+                    .drawBehind {
+                        drawRoundRect(
+                            color = Color.Yellow,
+                            alpha = 0.2f,
+                            cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
+                        )
+                    }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
         }
     }
 }
