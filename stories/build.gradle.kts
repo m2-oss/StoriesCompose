@@ -49,6 +49,9 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
 
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui.compose)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -60,7 +63,7 @@ extensions.configure(PublishingExtension::class.java) {
         create("release", MavenPublication::class.java) {
             groupId = "ru.m2.squaremeter"
             artifactId = "stories"
-            version = "1.2.3"
+            version = "1.3.0"
             afterEvaluate {
                 from(components["release"])
             }

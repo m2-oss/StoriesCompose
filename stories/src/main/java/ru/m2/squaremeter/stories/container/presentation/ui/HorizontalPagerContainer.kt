@@ -34,11 +34,13 @@ import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.fastAny
+import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import ru.m2.squaremeter.stories.container.presentation.model.StoriesType
@@ -65,7 +67,7 @@ internal fun HorizontalPagerContainer(
     onFinished: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
-    content: @Composable BoxScope.(String, Int, Dp) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp, ExoPlayer) -> Unit
 ) {
     val screenWidthPx = LocalWindowInfo.current.containerSize.width.toFloat()
     val screenHeightPx = LocalWindowInfo.current.containerSize.height.toFloat()
@@ -146,7 +148,7 @@ internal fun HorizontalPagerContainer(
             storiesTypes,
             pagerState,
             preloadedStoriesIndex,
-            storiesState.duration,
+            storiesState.exoPlayer,
             onNext,
             onProgress,
             storiesParams,
@@ -200,11 +202,11 @@ private fun HorizontalPagerContent(
     storiesTypes: List<StoriesType>,
     pagerState: PagerState,
     preloadedStoriesIndex: Int,
-    duration: Int,
+    exoPlayer: ExoPlayer,
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
-    content: @Composable BoxScope.(String, Int, Dp) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp, ExoPlayer) -> Unit
 ) {
     /**
      * [preloadedStoriesIndex] is a [androidx.compose.foundation.pager.Pager]'s item to handle
@@ -215,7 +217,9 @@ private fun HorizontalPagerContent(
     if (storyType is StoriesType.Content) {
         val preloadedStory = storyType.content
         val preloadedSlideIndex = preloadedStory.slides.indexOfFirst { it.current }
+        val preloadedSlide = preloadedStory.slides.first { it.current }
 
+        if (preloadedSlide.duration == 0L) return
         if (storiesParams.transparentBackground) {
             var background by remember { mutableStateOf(Color.Black) }
             background = run {
@@ -241,7 +245,7 @@ private fun HorizontalPagerContent(
                     preloadedSlideIndex,
                     pagerState,
                     preloadedStoriesIndex,
-                    duration,
+                    exoPlayer,
                     onNext,
                     onProgress,
                     storiesParams,
@@ -254,7 +258,7 @@ private fun HorizontalPagerContent(
                 preloadedSlideIndex,
                 pagerState,
                 preloadedStoriesIndex,
-                duration,
+                exoPlayer,
                 onNext,
                 onProgress,
                 storiesParams,
@@ -270,11 +274,11 @@ private fun ContentContainer(
     preloadedSlideIndex: Int,
     pagerState: PagerState,
     preloadedStoriesIndex: Int,
-    duration: Int,
+    exoPlayer: ExoPlayer,
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
-    content: @Composable BoxScope.(String, Int, Dp) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp, ExoPlayer) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -304,7 +308,8 @@ private fun ContentContainer(
         content(
             preloadedStory.id,
             preloadedSlideIndex,
-            storiesParams.progressBarHeight
+            storiesParams.progressBarHeight,
+            exoPlayer
         )
         Stepper(
             modifier = if (storiesParams.fullScreen) {
@@ -316,7 +321,6 @@ private fun ContentContainer(
             },
             storiesIndex = preloadedStoriesIndex,
             slides = preloadedStory.slides,
-            duration = duration,
             onNext = onNext,
             onProgress = onProgress,
             storiesParams = storiesParams
@@ -330,7 +334,6 @@ private fun HorizontalPagerContainerPreview() {
     HorizontalPagerContainer(
         pagerState = PagerState { 1 },
         storiesState = StoriesState.initial(
-            durationInSec = 10,
             stories = listOf(
                 UiStories(
                     id = "",
@@ -338,7 +341,8 @@ private fun HorizontalPagerContainerPreview() {
                 )
             ),
             storiesId = "",
-            shownStories = emptyList()
+            shownStories = emptyList(),
+            exoPlayer = ExoPlayer.Builder(LocalContext.current).build()
         ),
         storiesTypes = listOf(
             StoriesType.Content(
@@ -359,6 +363,6 @@ private fun HorizontalPagerContainerPreview() {
         onFinished = {},
         onProgress = {},
         storiesParams = UiStoriesParams(),
-        content = { _, _, _ -> }
+        content = { _, _, _, _ -> }
     )
 }
