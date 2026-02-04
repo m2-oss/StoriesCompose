@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -20,6 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.media3.ui.compose.PlayerSurface
+import androidx.media3.ui.compose.SURFACE_TYPE_TEXTURE_VIEW
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -32,7 +35,7 @@ import ru.m2.squaremeter.stories.preview.presentation.ui.StoriesPreviewList
 import ru.m2.squaremeter.storiescompose.ui.theme.StoriesComposeTheme
 
 private const val SLIDES_COUNT = 3
-private const val SLIDE_DURATION = 10_000
+private const val SLIDE_DURATION = 10_000L
 private val SLIDES_COLORS = listOf(
     Color.LightGray,
     Color.Gray,
@@ -95,49 +98,80 @@ fun PreviewList(previews: List<UiStoriesPreviewData>, onClick: (String) -> Unit)
 
 @Composable
 fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinished: () -> Unit) {
-    StoriesContainer(
-        data = UiStoriesData(
-            storiesId = storiesId,
-            stories = buildMap {
-                val ids = previews.map { it.id }
-                ids.forEach {
-                    put(
-                        it,
-                        buildList {
-                            repeat(SLIDES_COUNT) {
-                                add(UiSlidesData(SLIDE_DURATION))
+    val data = UiStoriesData(
+        storiesId = storiesId,
+        stories = buildMap {
+            val ids = previews.map { it.id }
+            ids.forEach {
+                when (it) {
+                    "video1" -> {
+                        put(
+                            it,
+                            buildList {
+                                addAll(
+                                    listOf(
+                                        UiSlidesData.Image(duration = SLIDE_DURATION),
+                                        UiSlidesData.Video(url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"),
+                                        UiSlidesData.Image(duration = SLIDE_DURATION)
+                                    )
+                                )
                             }
-                        }
-                    )
-                }
-            }
-        ),
-        onFinished = onFinished
-    ) { stories, slide, progressBar ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(SLIDES_COLORS[slide])
-                .offset(y = progressBar)
-        ) {
-            Image(
-                painter = painterResource(R.drawable.ic_launcher_background),
-                contentDescription = null
-            )
-            Text(
-                text = "$stories, $slide",
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .clickable {}
-                    .drawBehind {
-                        drawRoundRect(
-                            color = Color.Yellow,
-                            alpha = 0.2f,
-                            cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
                         )
                     }
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
+
+                    else -> {
+                        put(
+                            it,
+                            buildList {
+                                repeat(SLIDES_COUNT) {
+                                    add(UiSlidesData.Image(duration = SLIDE_DURATION))
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    )
+    StoriesContainer(
+        data = data,
+        onFinished = onFinished
+    ) { stories, slide, progressBar, player ->
+        val video = data.stories[stories]?.get(slide) is UiSlidesData.Video
+        if (video) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                PlayerSurface(
+                    player = player,
+                    modifier = Modifier.fillMaxSize(),
+                    surfaceType = SURFACE_TYPE_TEXTURE_VIEW
+                )
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(SLIDES_COLORS[slide])
+                    .offset(y = progressBar)
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_launcher_background),
+                    contentDescription = null
+                )
+                Text(
+                    text = "$stories, $slide",
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .clickable {}
+                        .drawBehind {
+                            drawRoundRect(
+                                color = Color.Yellow,
+                                alpha = 0.2f,
+                                cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
+                            )
+                        }
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
         }
     }
 }

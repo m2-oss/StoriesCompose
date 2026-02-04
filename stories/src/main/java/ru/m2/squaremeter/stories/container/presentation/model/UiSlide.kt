@@ -4,7 +4,8 @@ internal data class UiSlide(
     val progressState: ProgressState = ProgressState.START,
     val current: Boolean = false,
     val progress: Float = 0f,
-    val duration: Int = 0
+    val duration: Long = 0L,
+    val video: Boolean = false
 ) {
 
     internal enum class ProgressState {

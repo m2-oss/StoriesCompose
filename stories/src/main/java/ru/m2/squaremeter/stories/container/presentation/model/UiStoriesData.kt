@@ -11,6 +11,9 @@ data class UiStoriesData(
     val stories: Map<String, List<UiSlidesData>>
 )
 
-data class UiSlidesData(
-    val duration: Int
-)
+sealed class UiSlidesData(open val duration: Long) {
+
+    data class Image(override val duration: Long) : UiSlidesData(duration)
+
+    data class Video(val url: String) : UiSlidesData(0L)
+}

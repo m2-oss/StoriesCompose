@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.exoplayer.ExoPlayer
 import ru.m2.squaremeter.stories.container.presentation.model.StoriesType
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
@@ -37,8 +38,9 @@ import ru.m2.squaremeter.stories.presentation.util.Colors
  * Next story id and slide index will be sent.
  * @param onFinished callback when the last story ends.
  * @param content UI part of a slide of a story. The scope is to place components relative to the container.
- * First arguments, story id and slide current index, are to find current story,
- * and the third one, progress bar height, is to place your content under it if necessary
+ * First two arguments, story id and slide current index, are to find current story.
+ * The third one, progress bar height, is to place your content under it if necessary.
+ * The last one, exoPLayer, is for video playing.
  */
 @Composable
 fun StoriesContainer(
@@ -46,7 +48,7 @@ fun StoriesContainer(
     storiesParams: UiStoriesParams = UiStoriesParams(),
     onStoriesChanged: (String, Int) -> Unit = { _, _ -> },
     onFinished: () -> Unit = {},
-    content: @Composable BoxScope.(String, Int, Dp) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp, ExoPlayer) -> Unit
 ) {
     MaterialTheme {
         val viewModel: StoriesViewModel = viewModel(
@@ -100,7 +102,7 @@ private fun StoriesContent(
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
-    content: @Composable BoxScope.(String, Int, Dp) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp, ExoPlayer) -> Unit
 ) {
     when (storiesState.ready) {
         ReadyState.IDLE -> return
@@ -316,7 +318,8 @@ private fun PreviewStoriesContent() {
                 )
             ),
             storiesId = "",
-            shownStories = emptyList()
+            shownStories = emptyList(),
+            exoPlayer = ExoPlayer.Builder(LocalContext.current).build()
         ),
         onPaused = {},
         onResumed = {},
@@ -327,6 +330,6 @@ private fun PreviewStoriesContent() {
         onStoriesChanged = { _, _ -> },
         onStoriesSet = {},
         storiesParams = UiStoriesParams(),
-        content = { _, _, _ -> }
+        content = { _, _, _, _ -> }
     )
 }
