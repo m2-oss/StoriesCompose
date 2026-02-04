@@ -4,7 +4,8 @@ internal data class UiStories(
     val id: String,
     val slides: List<UiSlide>,
     val current: Boolean = false,
-    val shown: Boolean = false
+    val shown: Boolean = false,
+    val video: Boolean = false
 )
 
 internal sealed class StoriesType {

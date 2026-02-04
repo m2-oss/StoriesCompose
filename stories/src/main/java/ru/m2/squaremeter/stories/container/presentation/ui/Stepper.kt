@@ -29,7 +29,6 @@ internal val STEPPER_TRACK_COLOR = Color(0x52FFFFFF)
 internal fun Stepper(
     storiesIndex: Int,
     slides: List<UiSlide>,
-    duration: Int,
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
@@ -61,7 +60,6 @@ internal fun Stepper(
     Progress(
         storiesIndex = storiesIndex,
         slides = slides,
-        duration = duration,
         onNext = onNext,
         onProgress = onProgress
     )
@@ -71,7 +69,6 @@ internal fun Stepper(
 private fun Progress(
     storiesIndex: Int,
     slides: List<UiSlide>,
-    duration: Int,
     onNext: () -> Unit,
     onProgress: (Float) -> Unit
 ) {
@@ -90,7 +87,7 @@ private fun Progress(
             UiSlide.ProgressState.RESUME -> {
                 progressAnimatable.snapTo(slide.progress)
 
-                val durationMillis = (TARGET_ANIMATION_VALUE - slide.progress) * duration
+                val durationMillis = (TARGET_ANIMATION_VALUE - slide.progress) * slide.duration
                 progressAnimatable.animateTo(
                     targetValue = TARGET_ANIMATION_VALUE,
                     animationSpec = tween(
@@ -120,7 +117,6 @@ private fun PreviewStepper() {
     Stepper(
         storiesIndex = 0,
         slides = listOf(UiSlide(current = true, progress = 0.5f), UiSlide(), UiSlide()),
-        duration = 10000,
         onNext = {},
         onProgress = {},
         storiesParams = UiStoriesParams()
