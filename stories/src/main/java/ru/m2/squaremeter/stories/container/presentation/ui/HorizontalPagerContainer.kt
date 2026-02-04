@@ -1,6 +1,7 @@
 package ru.m2.squaremeter.stories.container.presentation.ui
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -27,6 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.PointerId
+import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -34,12 +39,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.fastAny
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import ru.m2.squaremeter.stories.container.presentation.model.StoriesType
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
-import ru.m2.squaremeter.stories.container.presentation.util.detectTapGestures
 import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesState
 import ru.m2.squaremeter.stories.presentation.util.Colors
 import kotlin.math.absoluteValue
@@ -47,6 +52,7 @@ import kotlin.math.roundToInt
 
 private const val RATIO_TO_DISMISS = 5.0f
 private const val ROTATION_DEGREES = 45f
+private const val TAP_MAX_THRESHOLD_MS = 250
 
 @Composable
 internal fun HorizontalPagerContainer(
@@ -63,11 +69,13 @@ internal fun HorizontalPagerContainer(
 ) {
     val screenWidthPx = LocalWindowInfo.current.containerSize.width.toFloat()
     val screenHeightPx = LocalWindowInfo.current.containerSize.height.toFloat()
-    val offsetY = remember { Animatable(0f) }
+    val offsetYAnimatable = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
+    var pagerScrollEnabled by remember { mutableStateOf(true) }
 
     HorizontalPager(
         state = pagerState,
+        userScrollEnabled = pagerScrollEnabled,
         modifier = Modifier
             .fillMaxSize()
             .background(
@@ -77,70 +85,57 @@ internal fun HorizontalPagerContainer(
                     Color.Black
                 }
             )
-            .offset { IntOffset(0, offsetY.value.roundToInt()) }
+            .offset { IntOffset(0, offsetYAnimatable.value.roundToInt()) }
             .pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
                     tapInProgress.value = true
-                    var changedToUp = false
-                    while (!changedToUp) {
-                        val event = awaitPointerEvent()
-                        changedToUp = event.changes.fastAny {
-                            it.id == down.id && it.changedToUpIgnoreConsumed()
-                        }
-                        if (changedToUp) {
-                            tapInProgress.value = false
-                        }
-                    }
-                }
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { offset ->
-                        if (offset.x < screenWidthPx / 2) {
+                    // Waiting for the moment to release the finger
+                    val (isAtLeastOnePointerInputChangeConsumed, up) = waitForUp(down.id)
+                    tapInProgress.value = false
+
+                    // If no gestures were detected (i.e. "down" consumption
+                    // and isAtLeastOnePointerInputChangeConsumed are false) and the duration
+                    // between the lowering and raising of the finger is within
+                    // the TAP_MAX_THRESHOLD_MS interval, then a tap on an empty area is detected
+                    // and the slide must be switched
+                    val nothingConsumed =
+                        !down.isConsumed && !isAtLeastOnePointerInputChangeConsumed
+                    val tapDetected = up?.let {
+                        it.uptimeMillis - down.uptimeMillis <= TAP_MAX_THRESHOLD_MS
+                    } ?: false
+                    if (nothingConsumed && tapDetected) {
+                        if (up.position.x < screenWidthPx / 2) {
                             onPrevious()
                         } else {
                             onNext()
                         }
                     }
-                )
+                }
             }
             .pointerInput(Unit) {
                 detectVerticalDragGestures(
-                    onDragStart = {},
+                    onDragStart = {
+                        pagerScrollEnabled = false
+                    },
                     onDragEnd = {
-                        if (offsetY.value != 0f) {
-                            val ratio = screenHeightPx / offsetY.value
+                        if (offsetYAnimatable.value != 0f) {
+                            val ratio = screenHeightPx / offsetYAnimatable.value
                             if (ratio <= RATIO_TO_DISMISS) {
-                                scope.launch {
-                                    offsetY.animateTo(
-                                        targetValue = screenHeightPx,
-                                        animationSpec = spring(
-                                            dampingRatio = Spring.DampingRatioLowBouncy,
-                                            stiffness = Spring.StiffnessLow
-                                        )
-                                    )
-                                }
+                                animateDragging(screenHeightPx, scope, offsetYAnimatable)
                                 onFinished()
                             } else {
-                                scope.launch {
-                                    offsetY.animateTo(
-                                        targetValue = 0f,
-                                        animationSpec = spring(
-                                            dampingRatio = Spring.DampingRatioLowBouncy,
-                                            stiffness = Spring.StiffnessLow
-                                        )
-                                    )
-                                }
+                                animateDragging(0f, scope, offsetYAnimatable)
+                                pagerScrollEnabled = true
                             }
                         }
                     },
                     onDragCancel = {},
                     onVerticalDrag = { _, dragAmount ->
-                        val newOffset = offsetY.value + dragAmount
+                        val newOffset = offsetYAnimatable.value + dragAmount
                         if (newOffset >= 0) {
                             scope.launch {
-                                offsetY.snapTo(newOffset)
+                                offsetYAnimatable.snapTo(newOffset)
                             }
                         }
                     }
@@ -156,6 +151,46 @@ internal fun HorizontalPagerContainer(
             onProgress,
             storiesParams,
             content
+        )
+    }
+}
+
+/**
+ * The [androidx.compose.foundation.gestures.waitForUpOrCancellation] function was taken as a basis
+ * and modified to suit the needs of the library. It waits for an "up" event for the selected
+ * pointerId. It then returns an "up" PointerInputChange to the caller and notifies them
+ * whether any intermediate PointerInputChanges have been consumed. Such consumption indicates,
+ * for example, that a manual Story swiping has occurred or a certain button is clicked.
+ */
+private suspend fun AwaitPointerEventScope.waitForUp(
+    pointerId: PointerId
+): Pair<Boolean, PointerInputChange?> {
+    var isAtLeastOnePointerInputChangeConsumed = false
+    var event: PointerEvent
+    do {
+        event = awaitPointerEvent()
+        if (event.changes.fastAny { it.isConsumed }) {
+            isAtLeastOnePointerInputChangeConsumed = true
+        }
+        val changedToUp = event.changes.fastAny { change ->
+            change.id == pointerId && change.changedToUpIgnoreConsumed()
+        }
+    } while (!changedToUp)
+    return isAtLeastOnePointerInputChangeConsumed to event.changes.firstOrNull()
+}
+
+private fun animateDragging(
+    targetValue: Float,
+    scope: CoroutineScope,
+    animatable: Animatable<Float, AnimationVector1D>
+) {
+    scope.launch {
+        animatable.animateTo(
+            targetValue = targetValue,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioLowBouncy,
+                stiffness = Spring.StiffnessLow
+            )
         )
     }
 }
