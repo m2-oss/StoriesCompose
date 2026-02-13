@@ -15,7 +15,7 @@ internal class StoriesViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
         StoriesViewModel(
-            ExoPlayer.Builder(context).build(),
+            ExoPlayer.Builder(context).setDeviceVolumeControlEnabled(true).build(),
             StoriesShownRepositoryFactory.getInstance(context)
         ) as T
 }

@@ -218,9 +218,7 @@ private fun HorizontalPagerContent(
     if (storyType is StoriesType.Content) {
         val preloadedStory = storyType.content
         val preloadedSlideIndex = preloadedStory.slides.indexOfFirst { it.current }
-        val preloadedSlide = preloadedStory.slides.first { it.current }
 
-        if (preloadedSlide.duration == 0L) return
         if (storiesParams.transparentBackground) {
             var background by remember { mutableStateOf(Color.Black) }
             background = run {
