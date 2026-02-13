@@ -43,6 +43,7 @@ import androidx.compose.ui.util.fastAny
 import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import ru.m2.squaremeter.stories.container.presentation.model.PlayerHolder
 import ru.m2.squaremeter.stories.container.presentation.model.StoriesType
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
@@ -67,7 +68,7 @@ internal fun HorizontalPagerContainer(
     onFinished: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
-    content: @Composable BoxScope.(String, Int, Dp, ExoPlayer) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp, PlayerHolder) -> Unit
 ) {
     val screenWidthPx = LocalWindowInfo.current.containerSize.width.toFloat()
     val screenHeightPx = LocalWindowInfo.current.containerSize.height.toFloat()
@@ -206,7 +207,7 @@ private fun HorizontalPagerContent(
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
-    content: @Composable BoxScope.(String, Int, Dp, ExoPlayer) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp, PlayerHolder) -> Unit
 ) {
     /**
      * [preloadedStoriesIndex] is a [androidx.compose.foundation.pager.Pager]'s item to handle
@@ -278,7 +279,7 @@ private fun ContentContainer(
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
-    content: @Composable BoxScope.(String, Int, Dp, ExoPlayer) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp, PlayerHolder) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -309,7 +310,7 @@ private fun ContentContainer(
             preloadedStory.id,
             preloadedSlideIndex,
             storiesParams.progressBarHeight,
-            exoPlayer
+            PlayerHolder(exoPlayer)
         )
         Stepper(
             modifier = if (storiesParams.fullScreen) {
