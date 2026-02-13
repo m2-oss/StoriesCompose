@@ -111,7 +111,7 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
                                 addAll(
                                     listOf(
                                         UiSlidesData.Image(duration = SLIDE_DURATION),
-                                        UiSlidesData.Video(url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"),
+                                        UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/59d1bf8dd1ba8cee2d5df824ea01871d.mp4"),
                                         UiSlidesData.Image(duration = SLIDE_DURATION)
                                     )
                                 )
@@ -136,12 +136,12 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
     StoriesContainer(
         data = data,
         onFinished = onFinished
-    ) { stories, slide, progressBar, player ->
+    ) { stories, slide, progressBar, playerHolder ->
         val video = data.stories[stories]?.get(slide) is UiSlidesData.Video
         if (video) {
             Column(modifier = Modifier.fillMaxSize()) {
                 PlayerSurface(
-                    player = player,
+                    player = playerHolder.player,
                     modifier = Modifier.fillMaxSize(),
                     surfaceType = SURFACE_TYPE_TEXTURE_VIEW
                 )

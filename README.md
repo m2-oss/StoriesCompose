@@ -22,7 +22,7 @@ dependencyResolutionManagement {
   - to your build.gradle of the module of usage:
 ``` kotlin
 dependencies {
-  implementation("com.github.m2-oss:StoriesCompose:1.3.0")
+  implementation("com.github.m2-oss:StoriesCompose:1.3.1")
 }
 ```
 

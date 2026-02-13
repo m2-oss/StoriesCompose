@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.exoplayer.ExoPlayer
+import ru.m2.squaremeter.stories.container.presentation.model.PlayerHolder
 import ru.m2.squaremeter.stories.container.presentation.model.StoriesType
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
@@ -48,7 +49,7 @@ fun StoriesContainer(
     storiesParams: UiStoriesParams = UiStoriesParams(),
     onStoriesChanged: (String, Int) -> Unit = { _, _ -> },
     onFinished: () -> Unit = {},
-    content: @Composable BoxScope.(String, Int, Dp, ExoPlayer) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp, PlayerHolder) -> Unit
 ) {
     MaterialTheme {
         val viewModel: StoriesViewModel = viewModel(
@@ -102,7 +103,7 @@ private fun StoriesContent(
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
-    content: @Composable BoxScope.(String, Int, Dp, ExoPlayer) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp, PlayerHolder) -> Unit
 ) {
     when (storiesState.ready) {
         ReadyState.IDLE -> return
