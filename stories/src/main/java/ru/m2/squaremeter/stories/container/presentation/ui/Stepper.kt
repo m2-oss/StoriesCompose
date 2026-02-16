@@ -79,13 +79,14 @@ private fun Progress(
     }
     val progressState = slide.progressState
 
+    if (slide.duration == 0L) return
+
     LaunchedEffect(slideIndex, storiesIndex, progressState) {
         when (progressState) {
             UiSlide.ProgressState.START -> {
             }
 
             UiSlide.ProgressState.RESUME -> {
-                if (slide.duration == 0L) return@LaunchedEffect
                 progressAnimatable.snapTo(slide.progress)
 
                 val durationMillis = (TARGET_ANIMATION_VALUE - slide.progress) * slide.duration
