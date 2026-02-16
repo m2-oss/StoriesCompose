@@ -63,7 +63,7 @@ extensions.configure(PublishingExtension::class.java) {
         create("release", MavenPublication::class.java) {
             groupId = "ru.m2.squaremeter"
             artifactId = "stories"
-            version = "1.3.1"
+            version = "1.3.2"
             afterEvaluate {
                 from(components["release"])
             }
