@@ -81,28 +81,17 @@ internal class StoriesViewModel(
         exoPlayer.apply {
             addListener(
                 object : Player.Listener {
-                    override fun onPlaybackStateChanged(playbackstate: Int) {
-                        when (playbackState) {
-                            Player.STATE_BUFFERING -> {
-                                setPaused()
-                            }
-
-                            Player.STATE_READY -> {
-                                val duration = exoPlayer.duration
-                                if (duration <= 0L) return
-                                val targetStoriesIndex =
-                                    stateFlow.value.stories.indexOfFirst { it.id == videoStoriesKey }
-                                mutableStateFlow.value = stateFlow.value.duration(
-                                    targetStoriesIndex = targetStoriesIndex,
-                                    targetSlideIndex = videoSlideIndex,
-                                    duration = duration
-                                )
-                                setResumed()
-                            }
-
-                            Player.STATE_ENDED,
-                            Player.STATE_IDLE -> {
-                            }
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        if (playbackState == Player.STATE_READY) {
+                            val duration = exoPlayer.duration
+                            if (duration <= 0L) return
+                            val targetStoriesIndex =
+                                stateFlow.value.stories.indexOfFirst { it.id == videoStoriesKey }
+                            mutableStateFlow.value = stateFlow.value.duration(
+                                targetStoriesIndex = targetStoriesIndex,
+                                targetSlideIndex = videoSlideIndex,
+                                duration = duration
+                            )
                         }
                     }
                 }
@@ -219,7 +208,6 @@ internal class StoriesViewModel(
                 UiSlide.ProgressState.PAUSE
             )
             if (currentSlide.progressState !in (validStates)) return
-            if (isVideoNow() && exoPlayer.playbackState != Player.STATE_READY) return
             setStoriesShown(currentStoriesIndex)
             mutableStateFlow.value = stateFlow.value.resume()
             resumeVideo()
