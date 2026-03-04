@@ -85,8 +85,9 @@ internal class StoriesViewModel(
                         if (playbackState == Player.STATE_READY) {
                             val duration = exoPlayer.duration
                             if (duration <= 0L) return
-                            val targetStoriesIndex = stateFlow.value.stories.indexOfFirst { it.id == videoStoriesKey }
-                            mutableStateFlow.value = mutableStateFlow.value.duration(
+                            val targetStoriesIndex =
+                                stateFlow.value.stories.indexOfFirst { it.id == videoStoriesKey }
+                            mutableStateFlow.value = stateFlow.value.duration(
                                 targetStoriesIndex = targetStoriesIndex,
                                 targetSlideIndex = videoSlideIndex,
                                 duration = duration

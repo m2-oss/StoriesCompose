@@ -322,7 +322,8 @@ private fun ContentContainer(
             slides = preloadedStory.slides,
             onNext = onNext,
             onProgress = onProgress,
-            storiesParams = storiesParams
+            storiesParams = storiesParams,
+            playerHolder = PlayerHolder(exoPlayer)
         )
     }
 }

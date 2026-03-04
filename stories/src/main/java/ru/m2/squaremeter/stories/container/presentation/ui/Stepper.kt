@@ -10,14 +10,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
+import ru.m2.squaremeter.stories.container.presentation.model.PlayerHolder
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
 
@@ -32,6 +42,7 @@ internal fun Stepper(
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
+    playerHolder: PlayerHolder,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -57,12 +68,23 @@ internal fun Stepper(
         }
     }
 
-    Progress(
-        storiesIndex = storiesIndex,
-        slides = slides,
-        onNext = onNext,
-        onProgress = onProgress
-    )
+    val slideIndex = slides.indexOfFirst { it.current }
+    val slide = slides[slideIndex]
+    if (slide.video) {
+        if (slide.duration == 0L) return
+        VideoProgress(
+            playerHolder = playerHolder,
+            onNext = onNext,
+            onProgress = onProgress
+        )
+    } else {
+        Progress(
+            storiesIndex = storiesIndex,
+            slides = slides,
+            onNext = onNext,
+            onProgress = onProgress,
+        )
+    }
 }
 
 @Composable
@@ -113,6 +135,46 @@ private fun Progress(
     }
 }
 
+@Composable
+private fun VideoProgress(
+    playerHolder: PlayerHolder,
+    onNext: () -> Unit,
+    onProgress: (Float) -> Unit,
+) {
+    val player = playerHolder.player
+    var progress by remember { mutableFloatStateOf(0f) }
+    var isPlaying by remember { mutableStateOf(player.isPlaying) }
+
+
+    DisposableEffect(player) {
+        val listener = object : Player.Listener {
+            override fun onIsPlayingChanged(playing: Boolean) {
+                isPlaying = playing
+            }
+        }
+        player.addListener(listener)
+        onDispose { player.removeListener(listener) }
+    }
+
+    LaunchedEffect(player, isPlaying) {
+        if (isPlaying) {
+            while (true) {
+                withFrameMillis {
+                    val duration = player.duration.coerceAtLeast(1L)
+                    val current = player.currentPosition.coerceAtLeast(0L)
+
+                    progress = (current.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
+                    if (progress == 1f) {
+                        onNext()
+                    } else {
+                        onProgress(progress)
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun PreviewStepper() {
@@ -121,6 +183,7 @@ private fun PreviewStepper() {
         slides = listOf(UiSlide(current = true, progress = 0.5f), UiSlide(), UiSlide()),
         onNext = {},
         onProgress = {},
-        storiesParams = UiStoriesParams()
+        storiesParams = UiStoriesParams(),
+        playerHolder = PlayerHolder(ExoPlayer.Builder(LocalContext.current).build())
     )
 }
