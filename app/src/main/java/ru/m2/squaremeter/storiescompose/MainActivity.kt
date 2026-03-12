@@ -39,7 +39,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.C
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.ContentFrame
 import androidx.media3.ui.compose.SURFACE_TYPE_TEXTURE_VIEW
@@ -127,6 +129,13 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
         val player = playerHolder.player
         Column(modifier = Modifier.fillMaxSize()) {
             val mute = remember { mutableStateOf(player.volume == 0f) }
+            val muteVisible = remember {
+                mutableStateOf(
+                    player.currentTracks.groups.any { trackGroup ->
+                        trackGroup.type == C.TRACK_TYPE_AUDIO
+                    }
+                )
+            }
 
             SilentModeDisposableEffect(
                 player = player,
@@ -140,7 +149,15 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
                 muteButtonState = muteButtonState
             )
 
+            CheckSoundDisposableEffect(
+                player = player,
+                muteVisible = muteVisible,
+                stories = stories,
+                slide = slide
+            )
+
             val video = data.stories[stories]?.get(slide) is UiSlidesData.Video
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -153,7 +170,7 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
                     ImageContent(stories, slide, progressBar)
                 }
             }
-            SafeZone(player, mute, muteButtonState, video)
+            SafeZone(player, mute, muteButtonState, video, muteVisible)
         }
     }
 }
@@ -163,7 +180,8 @@ private fun SafeZone(
     player: ExoPlayer,
     mute: MutableState<Boolean>,
     muteButtonState: MutableState<MuteButtonState>,
-    video: Boolean
+    video: Boolean,
+    muteVisible: MutableState<Boolean>
 ) {
     Box(
         modifier = Modifier
@@ -175,7 +193,7 @@ private fun SafeZone(
             modifier = Modifier.padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            if (video) {
+            if (video && muteVisible.value) {
                 MuteButton(
                     player = player,
                     mute = mute,
@@ -203,6 +221,8 @@ private fun createData(
                             addAll(
                                 listOf(
                                     UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/59d1bf8dd1ba8cee2d5df824ea01871d.mp4"),
+//                                    UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/5cb09b3bfb1e4a16c52c5c6eba8e9d82.mp4"),
+                                    UiSlidesData.Image(duration = SLIDE_DURATION)
                                 )
                             )
                         }
@@ -292,6 +312,26 @@ private fun DeviceVolumeDisposableEffect(
                     mute = mute.value
                 )
                 player.volume = if (mute.value) 0f else 1f
+            }
+        }
+
+        player.addListener(listener)
+        onDispose { player.removeListener(listener) }
+    }
+}
+
+@Composable
+private fun CheckSoundDisposableEffect(
+    player: ExoPlayer,
+    muteVisible: MutableState<Boolean>,
+    stories: String,
+    slide: Int
+) {
+    DisposableEffect(player, stories, slide) {
+        val listener = object : Player.Listener {
+            override fun onTracksChanged(tracks: Tracks) {
+                val hasAudio = tracks.groups.any { it.type == C.TRACK_TYPE_AUDIO }
+                muteVisible.value = hasAudio
             }
         }
 
