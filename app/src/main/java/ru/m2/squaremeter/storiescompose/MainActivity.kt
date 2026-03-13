@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -136,6 +137,9 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
                     }
                 )
             }
+            val loading = remember {
+                mutableStateOf(player.playbackState == Player.STATE_BUFFERING)
+            }
 
             SilentModeDisposableEffect(
                 player = player,
@@ -156,6 +160,8 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
                 slide = slide
             )
 
+            IsVideoLoadingDisposableEffect(player = player, loading = loading)
+
             val video = data.stories[stories]?.get(slide) is UiSlidesData.Video
 
             Box(
@@ -165,7 +171,7 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
                     .background(Color.Gray)
             ) {
                 if (video) {
-                    VideoContent(player)
+                    VideoContent(player, loading)
                 } else {
                     ImageContent(stories, slide, progressBar)
                 }
@@ -341,6 +347,23 @@ private fun CheckSoundDisposableEffect(
 }
 
 @Composable
+private fun IsVideoLoadingDisposableEffect(
+    player: ExoPlayer,
+    loading: MutableState<Boolean>
+) {
+    DisposableEffect(player) {
+        val listener = object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                loading.value = playbackState == Player.STATE_BUFFERING
+            }
+        }
+
+        player.addListener(listener)
+        onDispose { player.removeListener(listener) }
+    }
+}
+
+@Composable
 private fun MuteButton(
     player: ExoPlayer,
     mute: MutableState<Boolean>,
@@ -371,24 +394,33 @@ private fun MuteButton(
 }
 
 @Composable
-private fun VideoContent(player: ExoPlayer) {
+private fun VideoContent(player: ExoPlayer, loading: MutableState<Boolean>) {
     Column(modifier = Modifier.fillMaxSize()) {
-        ContentFrame(
-            player = player,
-            modifier = Modifier.fillMaxSize(),
-            surfaceType = SURFACE_TYPE_TEXTURE_VIEW,
-            contentScale = ContentScale.Crop,
-            shutter = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Red),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("AAAAA")
+        if (loading.value) {
+            Loader()
+        } else {
+            ContentFrame(
+                player = player,
+                modifier = Modifier.fillMaxSize(),
+                surfaceType = SURFACE_TYPE_TEXTURE_VIEW,
+                contentScale = ContentScale.Fit,
+                shutter = {
+                    Loader()
                 }
-            }
-        )
+            )
+        }
+    }
+}
+
+@Composable
+private fun Loader() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
     }
 }
 
