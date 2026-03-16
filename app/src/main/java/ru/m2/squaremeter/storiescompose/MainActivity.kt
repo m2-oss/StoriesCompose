@@ -395,19 +395,18 @@ private fun MuteButton(
 
 @Composable
 private fun VideoContent(player: ExoPlayer, loading: MutableState<Boolean>) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        ContentFrame(
+            player = player,
+            modifier = Modifier.fillMaxSize(),
+            surfaceType = SURFACE_TYPE_TEXTURE_VIEW,
+            contentScale = ContentScale.Fit,
+            shutter = {
+                Loader()
+            }
+        )
         if (loading.value) {
             Loader()
-        } else {
-            ContentFrame(
-                player = player,
-                modifier = Modifier.fillMaxSize(),
-                surfaceType = SURFACE_TYPE_TEXTURE_VIEW,
-                contentScale = ContentScale.Fit,
-                shutter = {
-                    Loader()
-                }
-            )
         }
     }
 }
@@ -415,9 +414,7 @@ private fun VideoContent(player: ExoPlayer, loading: MutableState<Boolean>) {
 @Composable
 private fun Loader() {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator()
