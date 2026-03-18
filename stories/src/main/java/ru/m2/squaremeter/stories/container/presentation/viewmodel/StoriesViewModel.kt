@@ -4,8 +4,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -18,19 +16,22 @@ import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlidesData
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesData
+import ru.m2.squaremeter.stories.container.presentation.model.UiVideo
+import ru.m2.squaremeter.stories.container.presentation.util.PlayerPool
 import ru.m2.squaremeter.stories.domain.entity.ShownStories
 import ru.m2.squaremeter.stories.domain.repository.StoriesShownRepository
 
 private const val LOG_TAG = "stories_lib_StoriesViewModel"
 
 internal class StoriesViewModel(
-    private val exoPlayer: ExoPlayer,
+    private val playerPool: PlayerPool,
     private val storiesShownRepository: StoriesShownRepository
 ) : ViewModel() {
 
     private var currentJob: Job? = null
-    private val mutableStateFlow = MutableStateFlow(StoriesState(exoPlayer = exoPlayer))
+    private val mutableStateFlow = MutableStateFlow(StoriesState(playerPool = playerPool))
     val stateFlow: StateFlow<StoriesState> = mutableStateFlow.asStateFlow()
+    private val videos = mutableListOf<UiVideo>()
 
     fun init(data: UiStoriesData) {
         viewModelScope.launch(CoroutineExceptionHandler { _, throwable ->
@@ -40,16 +41,14 @@ internal class StoriesViewModel(
             val shownStories = withContext(Dispatchers.IO) {
                 storiesShownRepository.get()
             }
-            var videoStoriesKey = ""
-            var videoSlideIndex = 0
-            var videoUrl = ""
+            videos.clear()
             mutableStateFlow.value = StoriesState.initial(
                 stories = data.stories.map { story ->
                     val uiSlides = story.value.mapIndexed { index, slide ->
                         if (slide is UiSlidesData.Video) {
-                            videoStoriesKey = story.key
-                            videoSlideIndex = index
-                            videoUrl = slide.url
+                            videos.add(
+                                UiVideo(storiesId = story.key, slideIndex = index, url = slide.url)
+                            )
                         }
                         UiSlide(duration = slide.duration, video = slide is UiSlidesData.Video)
                     }
@@ -61,12 +60,13 @@ internal class StoriesViewModel(
                 },
                 storiesId = data.storiesId,
                 shownStories = shownStories,
-                exoPlayer = exoPlayer
+                playerPool = playerPool
             )
-            exoPlayer.stop()
-            if (videoUrl.isNotEmpty()) {
-                prepareVideo(videoUrl, videoStoriesKey, videoSlideIndex)
-            }
+            stateFlow.value.exoPlayer.stop()
+            seekToVideo(
+                storiesIndex = stateFlow.value.currentStoriesIndex,
+                slideIndex = stateFlow.value.currentSlideIndex
+            )
         }.also { job ->
             currentJob?.let {
                 if (it.isActive) {
@@ -77,55 +77,79 @@ internal class StoriesViewModel(
         }
     }
 
-    fun prepareVideo(videoUrl: String, videoStoriesKey: String, videoSlideIndex: Int) {
-        exoPlayer.apply {
-            addListener(
-                object : Player.Listener {
-                    override fun onPlaybackStateChanged(playbackState: Int) {
-                        if (playbackState == Player.STATE_READY) {
-                            val duration = exoPlayer.duration
-                            if (duration <= 0L) return
-                            val targetStoriesIndex =
-                                stateFlow.value.stories.indexOfFirst { it.id == videoStoriesKey }
-                            mutableStateFlow.value = stateFlow.value.duration(
-                                targetStoriesIndex = targetStoriesIndex,
-                                targetSlideIndex = videoSlideIndex,
-                                duration = duration
-                            )
-                        }
-                    }
-                }
-            )
-            setMediaItem(MediaItem.fromUri(videoUrl))
+    private fun prepareVideo(videos: List<UiVideo>, index: Int) {
+        stateFlow.value.exoPlayer.apply {
+            setMediaItems(videos.map { MediaItem.fromUri(it.url) })
+            seekTo(index, 0L)
             prepare()
         }
     }
 
-    fun isVideoNow(): Boolean =
-        stateFlow.value.currentStories.video && stateFlow.value.currentSlide.video
+    fun updateDuration(duration: Long) {
+        val mediaItemIndex = stateFlow.value.exoPlayer.currentMediaItemIndex
+        val video = videos.filter { it.storiesId == stateFlow.value.currentStories.id }
+            .getOrNull(mediaItemIndex)
+        if (video == null) {
+            Log.e(
+                LOG_TAG,
+                "video not found by mediaItemIndex: $mediaItemIndex, " +
+                        "current stories id: ${stateFlow.value.currentStories.id}"
+            )
+            return
+        }
+        val targetStoriesIndex =
+            stateFlow.value.stories.indexOfFirst { it.id == video.storiesId }
+        mutableStateFlow.value = stateFlow.value.duration(
+            targetStoriesIndex = targetStoriesIndex,
+            targetSlideIndex = video.slideIndex,
+            duration = duration
+        )
+    }
+
+    fun isVideoNow(
+        storiesIndex: Int = stateFlow.value.currentStoriesIndex,
+        slideIndex: Int = stateFlow.value.currentSlideIndex
+    ): Boolean =
+        stateFlow.value.stories[storiesIndex].video &&
+                stateFlow.value.stories[storiesIndex].slides[slideIndex].video
+
+    fun refreshVideo() {
+        stateFlow.value.exoPlayer.pause()
+        stateFlow.value.exoPlayer.seekToPrevious()
+    }
 
     fun resumeVideo() {
-        if (isVideoNow()) {
-            exoPlayer.play()
-        }
+        if (!isVideoNow()) return
+        stateFlow.value.exoPlayer.play()
     }
 
     fun pauseVideo() {
-        exoPlayer.pause()
+        if (!isVideoNow()) return
+        stateFlow.value.exoPlayer.pause()
     }
 
-    fun nextVideo() {
-        exoPlayer.pause()
-        exoPlayer.seekToPrevious()
+    fun seekToVideo(
+        storiesIndex: Int = stateFlow.value.currentStoriesIndex,
+        slideIndex: Int = stateFlow.value.currentSlideIndex
+    ) {
+        if (!isVideoNow(storiesIndex, slideIndex)) return
+        val storiesId = stateFlow.value.stories[storiesIndex].id
+        val currentVideos = videos.filter { it.storiesId == storiesId }
+        val videoIndex = currentVideos.indexOfFirst { it.slideIndex == slideIndex }
+        prepareVideo(currentVideos, videoIndex)
     }
 
-    fun prevVideo() {
-        exoPlayer.pause()
-        exoPlayer.seekToPrevious()
+    fun nextVideo(nextSlideIndex: Int) {
+        seekToVideo(slideIndex = nextSlideIndex)
+    }
+
+    fun prevVideo(previousSlideIndex: Int) {
+        seekToVideo(slideIndex = previousSlideIndex)
     }
 
     fun stopVideo() {
-        exoPlayer.stop()
+        if (!isVideoNow()) return
+        stateFlow.value.exoPlayer.stop()
     }
 
     fun setFinish() {
@@ -150,7 +174,7 @@ internal class StoriesViewModel(
                 }
             } else {
                 mutableStateFlow.value = stateFlow.value.slide(nextSlideIndex)
-                nextVideo()
+                nextVideo(nextSlideIndex)
             }
         }
     }
@@ -160,14 +184,14 @@ internal class StoriesViewModel(
             if (currentSlideIndex == 0) {
                 if (currentStoriesIndex == 0) {
                     mutableStateFlow.value = stateFlow.value.refreshSlide()
-                    prevVideo()
+                    refreshVideo()
                 } else {
                     setPreviousStories()
                 }
             } else {
                 val previousSlideIndex = currentSlideIndex - 1
                 mutableStateFlow.value = stateFlow.value.slide(previousSlideIndex)
-                prevVideo()
+                prevVideo(previousSlideIndex)
             }
         }
     }
@@ -180,7 +204,7 @@ internal class StoriesViewModel(
                 newStoriesIndex = newStoriesIndex,
                 newSlideIndex = slideIndex
             )
-            nextVideo()
+            seekToVideo(newStoriesIndex, slideIndex)
         }
     }
 
@@ -192,7 +216,7 @@ internal class StoriesViewModel(
                 newStoriesIndex = newStoriesIndex,
                 newSlideIndex = slideIndex
             )
-            prevVideo()
+            seekToVideo(newStoriesIndex, slideIndex)
         }
     }
 
@@ -265,10 +289,12 @@ internal class StoriesViewModel(
         with(stateFlow.value) {
             when {
                 page > currentStoriesIndex -> {
+                    pauseVideo()
                     setNextStories()
                 }
 
                 page < currentStoriesIndex -> {
+                    pauseVideo()
                     setPreviousStories()
                 }
 
@@ -284,7 +310,7 @@ internal class StoriesViewModel(
     }
 
     override fun onCleared() {
-        exoPlayer.release()
+        stateFlow.value.playerPool.releaseAll()
         super.onCleared()
     }
 }

@@ -1,12 +1,12 @@
 package ru.m2.squaremeter.stories.container.presentation.viewmodel
 
-import androidx.media3.exoplayer.ExoPlayer
-import ru.m2.squaremeter.stories.domain.entity.ShownStories
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
+import ru.m2.squaremeter.stories.container.presentation.util.PlayerPool
+import ru.m2.squaremeter.stories.domain.entity.ShownStories
 
 internal data class StoriesState(
-    val exoPlayer: ExoPlayer,
+    val playerPool: PlayerPool,
     val stories: List<UiStories> = emptyList(),
     val ready: ReadyState = ReadyState.IDLE
 ) {
@@ -17,6 +17,7 @@ internal data class StoriesState(
     val currentSlide get() = slides.first { it.current }
     val currentSlideIndex get() = slides.indexOfFirst { it.current }
     val slidesCount get() = slides.size
+    val exoPlayer get() = playerPool.get(currentStoriesIndex)
 
     fun slide(newSlideIndex: Int): StoriesState =
         progress(
@@ -158,7 +159,7 @@ internal data class StoriesState(
             stories: List<UiStories>,
             storiesId: String,
             shownStories: List<ShownStories>,
-            exoPlayer: ExoPlayer
+            playerPool: PlayerPool
         ): StoriesState =
             StoriesState(
                 stories = stories.map { story ->
@@ -185,7 +186,7 @@ internal data class StoriesState(
                     )
                 }.sortedBy { it.shown },
                 ready = ReadyState.PLAY,
-                exoPlayer = exoPlayer
+                playerPool = playerPool
             )
     }
 }
