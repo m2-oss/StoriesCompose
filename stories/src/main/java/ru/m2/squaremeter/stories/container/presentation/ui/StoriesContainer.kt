@@ -23,6 +23,7 @@ import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesData
 import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
+import ru.m2.squaremeter.stories.container.presentation.util.PlayerPool
 import ru.m2.squaremeter.stories.container.presentation.viewmodel.ReadyState
 import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesState
 import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesViewModel
@@ -86,6 +87,9 @@ fun StoriesContainer(
             },
             onStoriesChanged = onStoriesChanged,
             storiesParams = storiesParams,
+            onDurationUpdated = { duration ->
+                viewModel.updateDuration(duration)
+            },
             content = content
         )
     }
@@ -103,6 +107,7 @@ private fun StoriesContent(
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
+    onDurationUpdated: (Long) -> Unit,
     content: @Composable BoxScope.(String, Int, Dp, PlayerHolder) -> Unit
 ) {
     when (storiesState.ready) {
@@ -168,6 +173,7 @@ private fun StoriesContent(
         onFinished,
         onProgress,
         storiesParams,
+        onDurationUpdated,
         content
     )
 }
@@ -320,7 +326,7 @@ private fun PreviewStoriesContent() {
             ),
             storiesId = "",
             shownStories = emptyList(),
-            exoPlayer = ExoPlayer.Builder(LocalContext.current).build()
+            playerPool = PlayerPool(listOf(ExoPlayer.Builder(LocalContext.current).build()))
         ),
         onPaused = {},
         onResumed = {},
@@ -331,6 +337,7 @@ private fun PreviewStoriesContent() {
         onStoriesChanged = { _, _ -> },
         onStoriesSet = {},
         storiesParams = UiStoriesParams(),
+        onDurationUpdated = {},
         content = { _, _, _, _ -> }
     )
 }

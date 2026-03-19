@@ -227,8 +227,7 @@ private fun createData(
                             addAll(
                                 listOf(
                                     UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/59d1bf8dd1ba8cee2d5df824ea01871d.mp4"),
-//                                    UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/5cb09b3bfb1e4a16c52c5c6eba8e9d82.mp4"),
-                                    UiSlidesData.Image(duration = SLIDE_DURATION)
+                                    UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/5cb09b3bfb1e4a16c52c5c6eba8e9d82.mp4"),
                                 )
                             )
                         }
@@ -426,7 +425,7 @@ private fun ImageContent(stories: String, slide: Int, progressBar: Dp) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SLIDES_COLORS[slide])
+            .background(SLIDES_COLORS[slide % SLIDES_COLORS.size])
             .offset(y = progressBar)
     ) {
         Image(

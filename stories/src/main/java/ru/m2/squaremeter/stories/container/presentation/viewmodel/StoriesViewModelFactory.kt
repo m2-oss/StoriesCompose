@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import ru.m2.squaremeter.stories.StoriesShownRepositoryFactory
+import ru.m2.squaremeter.stories.container.presentation.util.PlayerPool
 
 internal class StoriesViewModelFactory(
     private val context: Context
@@ -15,7 +16,14 @@ internal class StoriesViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
         StoriesViewModel(
-            ExoPlayer.Builder(context).setDeviceVolumeControlEnabled(true).build(),
+            PlayerPool(
+                List(3) {
+                    ExoPlayer.Builder(context)
+                        .setPauseAtEndOfMediaItems(true)
+                        .setDeviceVolumeControlEnabled(true)
+                        .build()
+                }
+            ),
             StoriesShownRepositoryFactory.getInstance(context)
         ) as T
 }
