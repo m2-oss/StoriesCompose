@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.fastAny
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -48,6 +50,7 @@ import ru.m2.squaremeter.stories.container.presentation.model.StoriesType
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
+import ru.m2.squaremeter.stories.container.presentation.util.PlayerPool
 import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesState
 import ru.m2.squaremeter.stories.presentation.util.Colors
 import kotlin.math.absoluteValue
@@ -68,6 +71,7 @@ internal fun HorizontalPagerContainer(
     onFinished: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
+    onDurationUpdated: (Long) -> Unit,
     content: @Composable BoxScope.(String, Int, Dp, PlayerHolder) -> Unit
 ) {
     val screenWidthPx = LocalWindowInfo.current.containerSize.width.toFloat()
@@ -149,10 +153,11 @@ internal fun HorizontalPagerContainer(
             storiesTypes,
             pagerState,
             preloadedStoriesIndex,
-            storiesState.exoPlayer,
             onNext,
             onProgress,
             storiesParams,
+            storiesState.playerPool,
+            onDurationUpdated,
             content
         )
     }
@@ -203,21 +208,24 @@ private fun HorizontalPagerContent(
     storiesTypes: List<StoriesType>,
     pagerState: PagerState,
     preloadedStoriesIndex: Int,
-    exoPlayer: ExoPlayer,
     onNext: () -> Unit,
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
+    playerPool: PlayerPool,
+    onDurationUpdated: (Long) -> Unit,
     content: @Composable BoxScope.(String, Int, Dp, PlayerHolder) -> Unit
 ) {
     /**
      * [preloadedStoriesIndex] is a [androidx.compose.foundation.pager.Pager]'s item to handle
-     * because of pre-fetching and it might diverse from the one visible on the screen
+     * because of pre-fetching, and it might be diverse from the one visible on the screen
      * @see <a href="https://issuetracker.google.com/issues/289088847">pre-fetching</a>
      */
     val storyType = storiesTypes[preloadedStoriesIndex]
     if (storyType is StoriesType.Content) {
         val preloadedStory = storyType.content
         val preloadedSlideIndex = preloadedStory.slides.indexOfFirst { it.current }
+        val exoPlayer = playerPool.get(preloadedStoriesIndex - 1)
+        UpdateDurationDisposableEffect(exoPlayer, onDurationUpdated)
 
         if (storiesParams.transparentBackground) {
             var background by remember { mutableStateOf(Color.Black) }
@@ -264,6 +272,28 @@ private fun HorizontalPagerContent(
                 content
             )
         }
+    }
+}
+
+
+@Composable
+fun UpdateDurationDisposableEffect(
+    player: ExoPlayer,
+    onDurationUpdated: (Long) -> Unit
+) {
+    DisposableEffect(player) {
+        val listener = object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == Player.STATE_READY) {
+                    val duration = player.duration
+                    if (duration <= 0L) return
+                    onDurationUpdated(duration)
+                }
+            }
+        }
+
+        player.addListener(listener)
+        onDispose { player.removeListener(listener) }
     }
 }
 
@@ -342,7 +372,7 @@ private fun HorizontalPagerContainerPreview() {
             ),
             storiesId = "",
             shownStories = emptyList(),
-            exoPlayer = ExoPlayer.Builder(LocalContext.current).build()
+            playerPool = PlayerPool(listOf(ExoPlayer.Builder(LocalContext.current).build()))
         ),
         storiesTypes = listOf(
             StoriesType.Content(
@@ -363,6 +393,7 @@ private fun HorizontalPagerContainerPreview() {
         onFinished = {},
         onProgress = {},
         storiesParams = UiStoriesParams(),
+        onDurationUpdated = {},
         content = { _, _, _, _ -> }
     )
 }
