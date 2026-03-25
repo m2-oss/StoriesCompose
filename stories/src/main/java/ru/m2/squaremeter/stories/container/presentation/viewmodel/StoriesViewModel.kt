@@ -10,8 +10,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.m2.squaremeter.stories.container.presentation.ConnectivityObserver
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlidesData
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
@@ -24,11 +29,13 @@ import ru.m2.squaremeter.stories.domain.repository.StoriesShownRepository
 private const val LOG_TAG = "stories_lib_StoriesViewModel"
 
 internal class StoriesViewModel(
+    private val connectivityObserver: ConnectivityObserver,
     private val playerPool: PlayerPool,
     private val storiesShownRepository: StoriesShownRepository
 ) : ViewModel() {
 
-    private var currentJob: Job? = null
+    private var initJob: Job = Job().apply { cancel() }
+    private var networkJob: Job = Job().apply { cancel() }
     private val mutableStateFlow = MutableStateFlow(StoriesState(playerPool = playerPool))
     val stateFlow: StateFlow<StoriesState> = mutableStateFlow.asStateFlow()
     private val videos = mutableListOf<UiVideo>()
@@ -67,22 +74,47 @@ internal class StoriesViewModel(
                 storiesIndex = stateFlow.value.currentStoriesIndex,
                 slideIndex = stateFlow.value.currentSlideIndex
             )
+            observeNetwork()
         }.also { job ->
-            currentJob?.let {
-                if (it.isActive) {
-                    it.cancel()
-                }
+            if (initJob.isActive) {
+                initJob.cancel()
             }
-            currentJob = job
+            initJob = job
         }
     }
 
-    private fun prepareVideo(videos: List<UiVideo>, index: Int) {
+    private fun observeNetwork() {
+        connectivityObserver.isConnected
+            .flowOn(Dispatchers.IO)
+            .onEach {
+                if (it) {
+                    restartVideo()
+                }
+            }
+            .catch {
+                Log.e(LOG_TAG, "Failed observing network state", it)
+            }
+            .launchIn(viewModelScope)
+            .also { job ->
+                if (networkJob.isActive) {
+                    networkJob.cancel()
+                }
+                networkJob = job
+            }
+    }
+
+    private fun prepareVideos(videos: List<UiVideo>, index: Int) {
         stateFlow.value.exoPlayer.apply {
             setMediaItems(videos.map { MediaItem.fromUri(it.url) })
             seekTo(index, 0L)
             prepare()
         }
+    }
+
+    fun restartVideo() {
+        if (!isVideoNow()) return
+        if (stateFlow.value.exoPlayer.playerError == null) return
+        stateFlow.value.exoPlayer.prepare()
     }
 
     fun updateDuration(duration: Long) {
@@ -136,7 +168,7 @@ internal class StoriesViewModel(
         val storiesId = stateFlow.value.stories[storiesIndex].id
         val currentVideos = videos.filter { it.storiesId == storiesId }
         val videoIndex = currentVideos.indexOfFirst { it.slideIndex == slideIndex }
-        prepareVideo(currentVideos, videoIndex)
+        prepareVideos(currentVideos, videoIndex)
     }
 
     fun nextVideo(nextSlideIndex: Int) {
