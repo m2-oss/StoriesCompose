@@ -138,7 +138,9 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
                 )
             }
             val loading = remember {
-                mutableStateOf(player.playbackState == Player.STATE_BUFFERING)
+                mutableStateOf(
+                    player.playbackState == Player.STATE_BUFFERING || player.playbackState == Player.STATE_IDLE
+                )
             }
 
             SilentModeDisposableEffect(
@@ -353,7 +355,8 @@ private fun IsVideoLoadingDisposableEffect(
     DisposableEffect(player) {
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
-                loading.value = playbackState == Player.STATE_BUFFERING
+                loading.value =
+                    playbackState == Player.STATE_BUFFERING || playbackState == Player.STATE_IDLE
             }
         }
 
