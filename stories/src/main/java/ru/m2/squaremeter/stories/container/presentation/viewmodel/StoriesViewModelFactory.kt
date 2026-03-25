@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import ru.m2.squaremeter.stories.StoriesShownRepositoryFactory
+import ru.m2.squaremeter.stories.container.presentation.ConnectivityObserver
 import ru.m2.squaremeter.stories.container.presentation.util.PlayerPool
 
 internal class StoriesViewModelFactory(
@@ -16,7 +17,7 @@ internal class StoriesViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
         StoriesViewModel(
-            PlayerPool(
+            playerPool = PlayerPool(
                 List(3) {
                     ExoPlayer.Builder(context)
                         .setPauseAtEndOfMediaItems(true)
@@ -24,6 +25,7 @@ internal class StoriesViewModelFactory(
                         .build()
                 }
             ),
-            StoriesShownRepositoryFactory.getInstance(context)
+            storiesShownRepository = StoriesShownRepositoryFactory.getInstance(context),
+            connectivityObserver = ConnectivityObserver(context)
         ) as T
 }
