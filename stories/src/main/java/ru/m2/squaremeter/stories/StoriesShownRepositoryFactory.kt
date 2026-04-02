@@ -17,20 +17,15 @@ class StoriesShownRepositoryFactory private constructor() {
         private var instance: StoriesShownRepository? = null
 
         fun getInstance(context: Context): StoriesShownRepository {
-            if (instance == null) {
-                synchronized(this) {
-                    if (instance == null) {
-                        instance = StoriesShownRepositoryImpl(
-                            Room.databaseBuilder(
-                                context,
-                                StoriesDatabase::class.java,
-                                "StoriesDatabase"
-                            ).build()
-                        )
-                    }
-                }
+            return instance ?: synchronized(this) {
+                instance ?: StoriesShownRepositoryImpl(
+                    Room.databaseBuilder(
+                        context.applicationContext,
+                        StoriesDatabase::class.java,
+                        "StoriesDatabase"
+                    ).build()
+                ).also { instance = it }
             }
-            return instance!!
         }
     }
 }

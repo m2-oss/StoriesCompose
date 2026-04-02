@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "StoriesCompose"
 include(":app")
 include(":stories")
+include(":stories-video")
