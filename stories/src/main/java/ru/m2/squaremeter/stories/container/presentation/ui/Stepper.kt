@@ -25,9 +25,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
-import ru.m2.squaremeter.stories.container.presentation.model.PlayerHolder
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
 

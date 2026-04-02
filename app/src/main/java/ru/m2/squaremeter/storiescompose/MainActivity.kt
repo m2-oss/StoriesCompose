@@ -221,32 +221,17 @@ private fun createData(
     stories = buildMap {
         val ids = previews.map { it.id }
         ids.forEach {
-            when (it) {
-                "video1" -> {
-                    put(
-                        it,
-                        buildList {
-                            addAll(
-                                listOf(
-                                    UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/59d1bf8dd1ba8cee2d5df824ea01871d.mp4"),
-                                    UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/5cb09b3bfb1e4a16c52c5c6eba8e9d82.mp4"),
-                                )
-                            )
-                        }
+            put(
+                it,
+                buildList {
+                    addAll(
+                        listOf(
+                            UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/59d1bf8dd1ba8cee2d5df824ea01871d.mp4"),
+                            UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/5cb09b3bfb1e4a16c52c5c6eba8e9d82.mp4"),
+                        )
                     )
                 }
-
-                else -> {
-                    put(
-                        it,
-                        buildList {
-                            repeat(SLIDES_COUNT) {
-                                add(UiSlidesData.Image(duration = SLIDE_DURATION))
-                            }
-                        }
-                    )
-                }
-            }
+            )
         }
     }
 )

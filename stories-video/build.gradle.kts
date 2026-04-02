@@ -36,6 +36,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":stories"))
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
@@ -46,8 +48,12 @@ dependencies {
     implementation(libs.coilSvg)
 
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.startup.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
+
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -59,7 +65,7 @@ extensions.configure(PublishingExtension::class.java) {
     publications {
         create("release", MavenPublication::class.java) {
             groupId = "ru.m2.squaremeter"
-            artifactId = "stories"
+            artifactId = "stories-video"
             version = "1.3.6"
             afterEvaluate {
                 from(components["release"])

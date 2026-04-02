@@ -1,6 +1,6 @@
 package ru.m2.squaremeter.stories.container.presentation.model
 
-internal data class UiVideo(
+data class UiVideo(
     val storiesId: String,
     val slideIndex: Int,
     val url: String

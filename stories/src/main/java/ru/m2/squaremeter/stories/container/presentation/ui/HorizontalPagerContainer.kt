@@ -41,16 +41,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.fastAny
-import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import ru.m2.squaremeter.stories.container.presentation.model.PlayerHolder
 import ru.m2.squaremeter.stories.container.presentation.model.StoriesType
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
-import ru.m2.squaremeter.stories.container.presentation.util.PlayerPool
 import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesState
 import ru.m2.squaremeter.stories.presentation.util.Colors
 import kotlin.math.absoluteValue

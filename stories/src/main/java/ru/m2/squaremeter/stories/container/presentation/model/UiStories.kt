@@ -1,6 +1,6 @@
 package ru.m2.squaremeter.stories.container.presentation.model
 
-internal data class UiStories(
+internal data class UiStories( // todo либо это засунуть внутри UiStoriesData, либо наоборот
     val id: String,
     val slides: List<UiSlide>,
     val current: Boolean = false,

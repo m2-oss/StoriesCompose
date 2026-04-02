@@ -16,6 +16,7 @@ composeViewmodelLifecycleVersion = "2.9.4"
 media3Exoplayer = "1.9.1"
 navigationCompose = "2.9.6"
 roomVersion = "2.8.4"
+startupRuntime = "1.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -46,6 +47,7 @@ coil = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilVersion" }
 coilOkHttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilVersion" }
 coilSvg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coilVersion" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+androidx-startup-runtime = { group = "androidx.startup", name = "startup-runtime", version.ref = "startupRuntime" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
