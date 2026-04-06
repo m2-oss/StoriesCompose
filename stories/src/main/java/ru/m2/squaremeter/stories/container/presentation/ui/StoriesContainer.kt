@@ -16,14 +16,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.media3.exoplayer.ExoPlayer
 import ru.m2.squaremeter.stories.container.presentation.model.PlayerHolder
 import ru.m2.squaremeter.stories.container.presentation.model.StoriesType
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlide
 import ru.m2.squaremeter.stories.container.presentation.model.UiStories
 import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesData
 import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesParams
-import ru.m2.squaremeter.stories.container.presentation.util.PlayerPool
 import ru.m2.squaremeter.stories.container.presentation.viewmodel.ReadyState
 import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesState
 import ru.m2.squaremeter.stories.container.presentation.viewmodel.StoriesViewModel
@@ -50,7 +48,7 @@ fun StoriesContainer(
     storiesParams: UiStoriesParams = UiStoriesParams(),
     onStoriesChanged: (String, Int) -> Unit = { _, _ -> },
     onFinished: () -> Unit = {},
-    content: @Composable BoxScope.(String, Int, Dp, PlayerHolder) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp, PlayerHolder?) -> Unit
 ) {
     MaterialTheme {
         val viewModel: StoriesViewModel = viewModel(
@@ -108,7 +106,7 @@ private fun StoriesContent(
     onProgress: (Float) -> Unit,
     storiesParams: UiStoriesParams,
     onDurationUpdated: (Long) -> Unit,
-    content: @Composable BoxScope.(String, Int, Dp, PlayerHolder) -> Unit
+    content: @Composable BoxScope.(String, Int, Dp, PlayerHolder?) -> Unit
 ) {
     when (storiesState.ready) {
         ReadyState.IDLE -> return
@@ -326,7 +324,7 @@ private fun PreviewStoriesContent() {
             ),
             storiesId = "",
             shownStories = emptyList(),
-            playerPool = PlayerPool(listOf(ExoPlayer.Builder(LocalContext.current).build()))
+            playerPool = null
         ),
         onPaused = {},
         onResumed = {},

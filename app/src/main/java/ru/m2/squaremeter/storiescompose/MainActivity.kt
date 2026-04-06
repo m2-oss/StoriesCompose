@@ -55,6 +55,7 @@ import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesData
 import ru.m2.squaremeter.stories.container.presentation.ui.StoriesContainer
 import ru.m2.squaremeter.stories.preview.presentation.model.UiStoriesPreviewData
 import ru.m2.squaremeter.stories.preview.presentation.ui.StoriesPreviewList
+import ru.m2.squaremeter.stories.video.presentation.model.ExoPlayerHolder
 import ru.m2.squaremeter.storiescompose.ui.theme.StoriesComposeTheme
 
 private const val SLIDES_COUNT = 3
@@ -127,19 +128,19 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
         data = data,
         onFinished = onFinished
     ) { stories, slide, progressBar, playerHolder ->
-        val player = playerHolder.player
+        val player = (playerHolder as? ExoPlayerHolder)?.player
         Column(modifier = Modifier.fillMaxSize()) {
-            val mute = remember { mutableStateOf(player.volume == 0f) }
+            val mute = remember { mutableStateOf(player?.volume == 0f) }
             val muteVisible = remember {
                 mutableStateOf(
-                    player.currentTracks.groups.any { trackGroup ->
+                    player?.currentTracks?.groups?.any { trackGroup ->
                         trackGroup.type == C.TRACK_TYPE_AUDIO
-                    }
+                    } ?: false
                 )
             }
             val loading = remember {
                 mutableStateOf(
-                    player.playbackState == Player.STATE_BUFFERING || player.playbackState == Player.STATE_IDLE
+                    player?.playbackState == Player.STATE_BUFFERING || player?.playbackState == Player.STATE_IDLE
                 )
             }
 
@@ -185,7 +186,7 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
 
 @Composable
 private fun SafeZone(
-    player: ExoPlayer,
+    player: ExoPlayer?,
     mute: MutableState<Boolean>,
     muteButtonState: MutableState<MuteButtonState>,
     video: Boolean,
@@ -201,7 +202,7 @@ private fun SafeZone(
             modifier = Modifier.padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            if (video && muteVisible.value) {
+            if (video && muteVisible.value && player != null) {
                 MuteButton(
                     player = player,
                     mute = mute,
@@ -221,39 +222,24 @@ private fun createData(
     stories = buildMap {
         val ids = previews.map { it.id }
         ids.forEach {
-            when (it) {
-                "video1" -> {
-                    put(
-                        it,
-                        buildList {
-                            addAll(
-                                listOf(
-                                    UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/59d1bf8dd1ba8cee2d5df824ea01871d.mp4"),
-                                    UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/5cb09b3bfb1e4a16c52c5c6eba8e9d82.mp4"),
-                                )
-                            )
-                        }
+            put(
+                it,
+                buildList {
+                    addAll(
+                        listOf(
+                            UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/59d1bf8dd1ba8cee2d5df824ea01871d.mp4"),
+                            UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/5cb09b3bfb1e4a16c52c5c6eba8e9d82.mp4"),
+                        )
                     )
                 }
-
-                else -> {
-                    put(
-                        it,
-                        buildList {
-                            repeat(SLIDES_COUNT) {
-                                add(UiSlidesData.Image(duration = SLIDE_DURATION))
-                            }
-                        }
-                    )
-                }
-            }
+            )
         }
     }
 )
 
 @Composable
 private fun SilentModeDisposableEffect(
-    player: ExoPlayer,
+    player: ExoPlayer?,
     mute: MutableState<Boolean>,
     muteButtonState: MutableState<MuteButtonState>
 ) {
@@ -283,11 +269,13 @@ private fun SilentModeDisposableEffect(
 }
 
 private fun setPlayerState(
-    player: ExoPlayer,
+    player: ExoPlayer?,
     mute: MutableState<Boolean>,
     muteButtonState: MutableState<MuteButtonState>,
     mode: Int
 ) {
+    if (player == null) return
+
     mute.value = if (muteButtonState.value.changed) {
         muteButtonState.value.mute
     } else {
@@ -302,10 +290,12 @@ private fun setPlayerState(
 
 @Composable
 private fun DeviceVolumeDisposableEffect(
-    player: ExoPlayer,
+    player: ExoPlayer?,
     mute: MutableState<Boolean>,
     muteButtonState: MutableState<MuteButtonState>
 ) {
+    if (player == null) return
+
     DisposableEffect(player) {
         val listener = object : Player.Listener {
             // Слушаем изменения аппаратной громкости устройства
@@ -329,11 +319,13 @@ private fun DeviceVolumeDisposableEffect(
 
 @Composable
 private fun CheckSoundDisposableEffect(
-    player: ExoPlayer,
+    player: ExoPlayer?,
     muteVisible: MutableState<Boolean>,
     stories: String,
     slide: Int
 ) {
+    if (player == null) return
+
     DisposableEffect(player, stories, slide) {
         val listener = object : Player.Listener {
             override fun onTracksChanged(tracks: Tracks) {
@@ -349,9 +341,11 @@ private fun CheckSoundDisposableEffect(
 
 @Composable
 private fun IsVideoLoadingDisposableEffect(
-    player: ExoPlayer,
+    player: ExoPlayer?,
     loading: MutableState<Boolean>
 ) {
+    if (player == null) return
+
     DisposableEffect(player) {
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -396,7 +390,9 @@ private fun MuteButton(
 }
 
 @Composable
-private fun VideoContent(player: ExoPlayer, loading: MutableState<Boolean>) {
+private fun VideoContent(player: ExoPlayer?, loading: MutableState<Boolean>) {
+    if (player == null) return
+
     Box(modifier = Modifier.fillMaxSize()) {
         ContentFrame(
             player = player,
