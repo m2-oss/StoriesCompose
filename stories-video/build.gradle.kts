@@ -66,7 +66,7 @@ extensions.configure(PublishingExtension::class.java) {
         create("release", MavenPublication::class.java) {
             groupId = "ru.m2.squaremeter"
             artifactId = "stories-video"
-            version = "1.3.6"
+            version = "1.3.7"
             afterEvaluate {
                 from(components["release"])
             }
