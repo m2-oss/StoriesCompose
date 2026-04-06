@@ -1,17 +1,10 @@
 package ru.m2.squaremeter.stories.container.presentation.util
 
-import androidx.media3.exoplayer.ExoPlayer
+import ru.m2.squaremeter.stories.container.presentation.model.PlayerHolder
 
-class PlayerPool(private val players: List<ExoPlayer>) {
+interface PlayerPool {
 
-    fun get(page: Int): ExoPlayer =
-        players[page % players.size]
+    fun get(page: Int): PlayerHolder
 
-
-    fun releaseAll() {
-        players.forEach {
-            it.stop()
-            it.release()
-        }
-    }
+    fun releaseAll()
 }
