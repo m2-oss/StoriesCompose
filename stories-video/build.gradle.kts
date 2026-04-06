@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "ru.m2.squaremeter.stories"
+    namespace = "ru.m2.squaremeter.stories.video"
     compileSdk = 36
 
     defaultConfig {
@@ -66,7 +66,7 @@ extensions.configure(PublishingExtension::class.java) {
         create("release", MavenPublication::class.java) {
             groupId = "ru.m2.squaremeter"
             artifactId = "stories-video"
-            version = "1.3.7"
+            version = "1.3.8"
             afterEvaluate {
                 from(components["release"])
             }
