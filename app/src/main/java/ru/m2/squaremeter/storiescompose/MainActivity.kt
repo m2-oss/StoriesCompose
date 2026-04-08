@@ -398,10 +398,7 @@ private fun VideoContent(player: ExoPlayer?, loading: MutableState<Boolean>) {
             player = player,
             modifier = Modifier.fillMaxSize(),
             surfaceType = SURFACE_TYPE_TEXTURE_VIEW,
-            contentScale = ContentScale.Fit,
-            shutter = {
-                Loader()
-            }
+            contentScale = ContentScale.Fit
         )
         if (loading.value) {
             Loader()
