@@ -114,6 +114,7 @@ private fun StoriesContent(
             onFinished()
             return
         }
+
         ReadyState.PLAY -> {}
     }
     val storiesTypes = storiesState.stories.addFakeStories()
@@ -124,6 +125,7 @@ private fun StoriesContent(
                 StoriesType.Content(storiesState.currentStories)
             )
         )
+
     /**
      * similar to [PagerState.isScrollInProgress], there are 3 reasons for it:
      * - [PagerState.isScrollInProgress] occasionally delays
@@ -132,7 +134,7 @@ private fun StoriesContent(
      * [ru.m2.squaremeter.stories.container.presentation.util.detectTapGestures] onPress
      * and change [PagerState.currentPage] to [StoriesType.Fake]
      * and therefore successfully finishes stories
-      */
+     */
     val tapInProgress = remember { mutableStateOf(false) }
 
     // change and launch stories or slide with tap
@@ -150,7 +152,11 @@ private fun StoriesContent(
     // close stories on last slide's tap
     CloseOnLastSlideTapLaunchedEffect(storiesState, onFinished)
     // pause a story if the container fragment isn't focused (e.g. a dialog)
-    WindowFocusLaunchedEffect(onResumed = onResumed, onPaused = onPaused)
+    WindowFocusLaunchedEffect(
+        onResumed = onResumed,
+        onPaused = onPaused,
+        tapInProgress = tapInProgress
+    )
     // change stories during swipe
     SwipeStoriesLaunchedEffect(
         storiesState,
@@ -187,11 +193,15 @@ private fun List<UiStories>.addFakeStories(): List<StoriesType> {
 }
 
 @Composable
-private fun WindowFocusLaunchedEffect(onResumed: () -> Unit, onPaused: () -> Unit) {
+private fun WindowFocusLaunchedEffect(
+    onResumed: () -> Unit,
+    onPaused: () -> Unit,
+    tapInProgress: MutableState<Boolean>
+) {
     val windowInfo = LocalWindowInfo.current
     LaunchedEffect(windowInfo) {
         snapshotFlow { windowInfo.isWindowFocused }.collect { isWindowFocused ->
-            if (isWindowFocused) {
+            if (isWindowFocused && !tapInProgress.value) {
                 onResumed()
             } else {
                 onPaused()
@@ -274,7 +284,7 @@ private fun SwipeStoriesLaunchedEffect(
              * and [PagerState.currentPage].
              * If a story is [StoriesType.Fake] then ignores stories change.
              * Also, if all fingers left the display (![tapInProgress]) then finish stories
-              */
+             */
             if (storiesTypes[it] is StoriesType.Fake) {
                 if (!tapInProgress.value) {
                     onFinished()

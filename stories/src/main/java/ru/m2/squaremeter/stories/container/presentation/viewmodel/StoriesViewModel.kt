@@ -300,12 +300,12 @@ internal class StoriesViewModel(
         with(stateFlow.value) {
             when {
                 page > currentStoriesIndex -> {
-                    pauseVideo()
+                    stopVideo()
                     setNextStories()
                 }
 
                 page < currentStoriesIndex -> {
-                    pauseVideo()
+                    stopVideo()
                     setPreviousStories()
                 }
 
