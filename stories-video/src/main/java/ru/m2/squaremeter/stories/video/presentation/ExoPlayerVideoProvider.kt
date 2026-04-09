@@ -14,24 +14,18 @@ import ru.m2.squaremeter.stories.video.presentation.util.ExoPlayerPool
 
 internal class ExoPlayerVideoProvider : StoryVideoProvider {
 
-    @Volatile
-    private var manager: StoryVideoManager? = null
-
     @OptIn(UnstableApi::class)
-    override fun createManager(context: Context): StoryVideoManager {
-        return manager ?: synchronized(this) {
-            manager ?: ExoPlayerVideoManager(
-                playerPool = ExoPlayerPool(
-                    List(3) {
-                        ExoPlayer.Builder(context.applicationContext)
-                            .setPauseAtEndOfMediaItems(true)
-                            .setDeviceVolumeControlEnabled(true)
-                            .build()
-                    }
-                )
-            ).also { manager = it }
-        }
-    }
+    override fun createManager(context: Context): StoryVideoManager =
+        ExoPlayerVideoManager(
+            playerPool = ExoPlayerPool(
+                List(3) {
+                    ExoPlayer.Builder(context.applicationContext)
+                        .setPauseAtEndOfMediaItems(true)
+                        .setDeviceVolumeControlEnabled(true)
+                        .build()
+                }
+            )
+        )
 
 
     @Composable
