@@ -2,6 +2,8 @@
 
 A library to make your stories easy to create with Compose. All the logic about stories transitions and shown indicating is implemented. All you need is only to create UI components.
 
+The UI design is entirely up to you - there's no need to pass parameters to expose content details.
+
 UPD: Since the stable version [1.3.9](https://github.com/m2-oss/StoriesCompose/releases/tag/1.3.9), there is a also an ability to add video stories!
 
 <img width="360" height="780" alt="3" src="https://github.com/user-attachments/assets/ae0560fd-c457-4c2f-86f9-b9d786a38b51" />
