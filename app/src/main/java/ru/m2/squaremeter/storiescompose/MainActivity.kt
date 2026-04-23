@@ -10,16 +10,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
@@ -31,8 +26,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -57,14 +50,6 @@ import ru.m2.squaremeter.stories.preview.presentation.model.UiStoriesPreviewData
 import ru.m2.squaremeter.stories.preview.presentation.ui.StoriesPreviewList
 import ru.m2.squaremeter.stories.video.presentation.model.ExoPlayerHolder
 import ru.m2.squaremeter.storiescompose.ui.theme.StoriesComposeTheme
-
-private const val SLIDES_COUNT = 3
-private const val SLIDE_DURATION = 10_000L
-private val SLIDES_COLORS = listOf(
-    Color.LightGray,
-    Color.Gray,
-    Color.DarkGray
-)
 
 class MainActivity : ComponentActivity() {
 
@@ -123,14 +108,29 @@ fun PreviewList(previews: List<UiStoriesPreviewData>, onClick: (String) -> Unit)
 @Composable
 fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinished: () -> Unit) {
     val data = createData(storiesId, previews)
-    val muteButtonState = remember { mutableStateOf(MuteButtonState()) }
     StoriesContainer(
         data = data,
         onFinished = onFinished
     ) { stories, slide, progressBar, playerHolder ->
         val player = (playerHolder as? ExoPlayerHolder)?.player
         Column(modifier = Modifier.fillMaxSize()) {
+            val loading = remember {
+                mutableStateOf(
+                    player?.playbackState == Player.STATE_BUFFERING || player?.playbackState == Player.STATE_IDLE
+                )
+            }
+            IsVideoLoadingDisposableEffect(player = player, loading = loading)
+
             val mute = remember { mutableStateOf(player?.volume == 0f) }
+            SilentModeDisposableEffect(
+                player = player,
+                mute = mute
+            )
+            DeviceVolumeDisposableEffect(
+                player = player,
+                mute = mute
+            )
+
             val muteVisible = remember {
                 mutableStateOf(
                     player?.currentTracks?.groups?.any { trackGroup ->
@@ -138,24 +138,6 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
                     } ?: false
                 )
             }
-            val loading = remember {
-                mutableStateOf(
-                    player?.playbackState == Player.STATE_BUFFERING || player?.playbackState == Player.STATE_IDLE
-                )
-            }
-
-            SilentModeDisposableEffect(
-                player = player,
-                mute = mute,
-                muteButtonState = muteButtonState
-            )
-
-            DeviceVolumeDisposableEffect(
-                player = player,
-                mute = mute,
-                muteButtonState = muteButtonState
-            )
-
             CheckSoundDisposableEffect(
                 player = player,
                 muteVisible = muteVisible,
@@ -163,14 +145,12 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
                 slide = slide
             )
 
-            IsVideoLoadingDisposableEffect(player = player, loading = loading)
 
             val video = data.stories[stories]?.get(slide) is UiSlidesData.Video
 
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                    .fillMaxSize()
                     .background(Color.Gray)
             ) {
                 if (video) {
@@ -178,36 +158,18 @@ fun Container(previews: List<UiStoriesPreviewData>, storiesId: String, onFinishe
                 } else {
                     ImageContent(stories, slide, progressBar)
                 }
-            }
-            SafeZone(player, mute, muteButtonState, video, muteVisible)
-        }
-    }
-}
-
-@Composable
-private fun SafeZone(
-    player: ExoPlayer?,
-    mute: MutableState<Boolean>,
-    muteButtonState: MutableState<MuteButtonState>,
-    video: Boolean,
-    muteVisible: MutableState<Boolean>
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(88.dp)
-            .background(Color.Blue)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            if (video && muteVisible.value && player != null) {
-                MuteButton(
-                    player = player,
-                    mute = mute,
-                    muteButtonState = muteButtonState
-                )
+                if (video && muteVisible.value && player != null) {
+                    Row(modifier = Modifier.align(Alignment.BottomStart)) {
+                        MuteButton(
+                            player = player,
+                            mute = mute
+                        )
+                        Text(
+                            text = "device volume = ${player.deviceVolume}, player volume = ${player.volume}",
+                            modifier = Modifier.background(Color.Green).align(Alignment.CenterVertically)
+                        )
+                    }
+                }
             }
         }
     }
@@ -225,11 +187,12 @@ private fun createData(
             put(
                 it,
                 buildList {
-                    addAll(
-                        listOf(
-                            UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/59d1bf8dd1ba8cee2d5df824ea01871d.mp4"),
-                            UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/5cb09b3bfb1e4a16c52c5c6eba8e9d82.mp4"),
-                        )
+                    add(
+                        if (it.contains("video")) {
+                            UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/88a0ed97d192b2131f80601d3f3aacd4.mp4")
+                        } else {
+                            UiSlidesData.Image(duration = 10_000L)
+                        }
                     )
                 }
             )
@@ -240,8 +203,7 @@ private fun createData(
 @Composable
 private fun SilentModeDisposableEffect(
     player: ExoPlayer?,
-    mute: MutableState<Boolean>,
-    muteButtonState: MutableState<MuteButtonState>
+    mute: MutableState<Boolean>
 ) {
     val context = LocalContext.current
     val audioManager =
@@ -251,7 +213,7 @@ private fun SilentModeDisposableEffect(
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent?.action == AudioManager.RINGER_MODE_CHANGED_ACTION) {
-                    setPlayerState(player, mute, muteButtonState, audioManager.ringerMode)
+                    setPlayerState(player, mute, audioManager.ringerMode)
                 }
             }
         }
@@ -260,7 +222,7 @@ private fun SilentModeDisposableEffect(
         context.registerReceiver(receiver, filter)
 
         // Проверка при инициализации
-        setPlayerState(player, mute, muteButtonState, audioManager.ringerMode)
+        setPlayerState(player, mute, audioManager.ringerMode)
 
         onDispose {
             context.unregisterReceiver(receiver)
@@ -271,28 +233,18 @@ private fun SilentModeDisposableEffect(
 private fun setPlayerState(
     player: ExoPlayer?,
     mute: MutableState<Boolean>,
-    muteButtonState: MutableState<MuteButtonState>,
     mode: Int
 ) {
     if (player == null) return
 
-    mute.value = if (muteButtonState.value.changed) {
-        muteButtonState.value.mute
-    } else {
-        player.deviceVolume == 0 || mode == AudioManager.RINGER_MODE_SILENT
-    }
-    muteButtonState.value = MuteButtonState(
-        changed = muteButtonState.value.changed,
-        mute = mute.value
-    )
+    mute.value = mode == AudioManager.RINGER_MODE_SILENT
     player.volume = if (mute.value) 0f else 1f
 }
 
 @Composable
 private fun DeviceVolumeDisposableEffect(
     player: ExoPlayer?,
-    mute: MutableState<Boolean>,
-    muteButtonState: MutableState<MuteButtonState>
+    mute: MutableState<Boolean>
 ) {
     if (player == null) return
 
@@ -304,10 +256,6 @@ private fun DeviceVolumeDisposableEffect(
                 muted: Boolean
             ) {
                 mute.value = muted || (volume == 0)
-                muteButtonState.value = MuteButtonState(
-                    changed = volume != 0,
-                    mute = mute.value
-                )
                 player.volume = if (mute.value) 0f else 1f
             }
         }
@@ -362,17 +310,12 @@ private fun IsVideoLoadingDisposableEffect(
 @Composable
 private fun MuteButton(
     player: ExoPlayer,
-    mute: MutableState<Boolean>,
-    muteButtonState: MutableState<MuteButtonState>
+    mute: MutableState<Boolean>
 ) {
     IconButton(
         modifier = Modifier.size(56.dp),
         onClick = {
             mute.value = !mute.value
-            muteButtonState.value = MuteButtonState(
-                changed = true,
-                mute = mute.value
-            )
             player.volume = if (mute.value) 0f else 1f
         }
     ) {
@@ -421,7 +364,7 @@ private fun ImageContent(stories: String, slide: Int, progressBar: Dp) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SLIDES_COLORS[slide % SLIDES_COLORS.size])
+            .background(Color.Gray)
             .offset(y = progressBar)
     ) {
         Image(
@@ -430,17 +373,7 @@ private fun ImageContent(stories: String, slide: Int, progressBar: Dp) {
         )
         Text(
             text = "$stories, $slide",
-            modifier = Modifier
-                .align(Alignment.Center)
-                .clickable {}
-                .drawBehind {
-                    drawRoundRect(
-                        color = Color.Yellow,
-                        alpha = 0.2f,
-                        cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
-                    )
-                }
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.align(Alignment.Center)
         )
     }
 }
