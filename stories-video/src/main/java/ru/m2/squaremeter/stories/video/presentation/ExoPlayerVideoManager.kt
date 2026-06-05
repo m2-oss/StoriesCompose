@@ -2,11 +2,11 @@ package ru.m2.squaremeter.stories.video.presentation
 
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
-import ru.m2.squaremeter.stories.container.presentation.util.PlayerPool
 import ru.m2.squaremeter.stories.container.presentation.StoryVideoManager
 import ru.m2.squaremeter.stories.container.presentation.model.UiSlidesData
 import ru.m2.squaremeter.stories.container.presentation.model.UiStoriesData
 import ru.m2.squaremeter.stories.container.presentation.model.UiVideo
+import ru.m2.squaremeter.stories.container.presentation.util.PlayerPool
 import ru.m2.squaremeter.stories.video.presentation.model.ExoPlayerHolder
 
 internal class ExoPlayerVideoManager(private val playerPool: PlayerPool) : StoryVideoManager {
@@ -32,13 +32,15 @@ internal class ExoPlayerVideoManager(private val playerPool: PlayerPool) : Story
     override fun seekToVideo(storiesIndex: Int, slideIndex: Int, storiesId: String) {
         val currentVideos = videos.filter { it.storiesId == storiesId }
         val videoIndex = currentVideos.indexOfFirst { it.slideIndex == slideIndex }
-        prepareVideos(currentVideos, videoIndex, storiesIndex)
+        getCurrentPlayer(storiesIndex).apply {
+            seekTo(videoIndex, 0L)
+        }
     }
 
-    private fun prepareVideos(videos: List<UiVideo>, videoSlideIndex: Int, storiesIndex: Int) {
+    override fun prepareVideos(storiesIndex: Int, storiesId: String) {
+        val currentVideos = videos.filter { it.storiesId == storiesId }
         getCurrentPlayer(storiesIndex).apply {
-            setMediaItems(videos.map { MediaItem.fromUri(it.url) })
-            seekTo(videoSlideIndex, 0L)
+            setMediaItems(currentVideos.map { MediaItem.fromUri(it.url) })
             prepare()
         }
     }
@@ -69,14 +71,6 @@ internal class ExoPlayerVideoManager(private val playerPool: PlayerPool) : Story
 
     override fun pauseVideo(storiesIndex: Int) {
         getCurrentPlayer(storiesIndex).pause()
-    }
-
-    override fun nextVideo(storiesIndex: Int, slideIndex: Int, storiesId: String) {
-        seekToVideo(storiesIndex, slideIndex, storiesId)
-    }
-
-    override fun prevVideo(storiesIndex: Int, slideIndex: Int, storiesId: String) {
-        seekToVideo(storiesIndex, slideIndex, storiesId)
     }
 
     override fun stopVideo(storiesIndex: Int) {

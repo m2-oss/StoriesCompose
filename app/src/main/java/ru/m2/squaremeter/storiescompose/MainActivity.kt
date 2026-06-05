@@ -58,8 +58,6 @@ import ru.m2.squaremeter.stories.preview.presentation.ui.StoriesPreviewList
 import ru.m2.squaremeter.stories.video.presentation.model.ExoPlayerHolder
 import ru.m2.squaremeter.storiescompose.ui.theme.StoriesComposeTheme
 
-private const val SLIDES_COUNT = 3
-private const val SLIDE_DURATION = 10_000L
 private val SLIDES_COLORS = listOf(
     Color.LightGray,
     Color.Gray,
@@ -222,17 +220,40 @@ private fun createData(
     stories = buildMap {
         val ids = previews.map { it.id }
         ids.forEach {
-            put(
-                it,
-                buildList {
-                    addAll(
-                        listOf(
-                            UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/59d1bf8dd1ba8cee2d5df824ea01871d.mp4"),
-                            UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/5cb09b3bfb1e4a16c52c5c6eba8e9d82.mp4"),
-                        )
+            val urls = when (it) {
+                "video1" -> {
+                    listOf(
+                        UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/43fbd9216ac7c74e5472819400d97811.mp4"),
+                        UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/59d1bf8dd1ba8cee2d5df824ea01871d.mp4")
                     )
                 }
-            )
+
+                "video2" -> {
+                    listOf(
+                        UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/73fc8d63d4aeb41b92cd2b2616e052af.mp4"),
+                        UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/5cb09b3bfb1e4a16c52c5c6eba8e9d82.mp4")
+                    )
+                }
+
+                "video3" -> {
+                    listOf(
+                        UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/db03db5cc405aee7dd2bdfe33d55d3a7.mp4"),
+                        UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/59d1bf8dd1ba8cee2d5df824ea01871d.mp4")
+                    )
+                }
+
+                "video4" -> {
+                    listOf(
+                        UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/7743ab4b803ff26d1009615d8a6e3208.mp4"),
+                        UiSlidesData.Video(url = "https://cdn.m2.ru/assets/file-upload-server/5cb09b3bfb1e4a16c52c5c6eba8e9d82.mp4")
+                    )
+                }
+
+                else -> {
+                    emptyList()
+                }
+            }
+            put(it, buildList { addAll(urls) })
         }
     }
 )
