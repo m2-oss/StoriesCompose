@@ -49,7 +49,7 @@ internal class StoriesViewModel(
             videoPlayerManager?.init(data)
             mutableStateFlow.value = StoriesState.initial(
                 stories = data.stories.map { story ->
-                    val uiSlides = story.value.mapIndexed { index, slide ->
+                    val uiSlides = story.value.map { slide ->
                         UiSlide(duration = slide.duration, video = slide is UiSlidesData.Video)
                     }
                     UiStories(
@@ -63,6 +63,10 @@ internal class StoriesViewModel(
                 playerPool = videoPlayerManager?.getPlayerPool()
             )
             videoPlayerManager?.stopVideo(stateFlow.value.currentStoriesIndex)
+            videoPlayerManager?.prepareVideos(
+                storiesIndex = stateFlow.value.currentStoriesIndex,
+                storiesId = data.storiesId
+            )
             videoPlayerManager?.seekToVideo(
                 storiesIndex = stateFlow.value.currentStoriesIndex,
                 slideIndex = stateFlow.value.currentSlideIndex,
@@ -141,21 +145,29 @@ internal class StoriesViewModel(
         videoPlayerManager?.pauseVideo(stateFlow.value.currentStoriesIndex)
     }
 
-    fun seekToVideo(
-        storiesIndex: Int = stateFlow.value.currentStoriesIndex,
-        slideIndex: Int = stateFlow.value.currentSlideIndex
-    ) {
+    fun setStoriesVideo(storiesIndex: Int, slideIndex: Int) {
         if (!isVideoNow(storiesIndex, slideIndex)) return
         val storiesId = stateFlow.value.stories[storiesIndex].id
-        videoPlayerManager?.seekToVideo(storiesIndex, slideIndex, storiesId)
+        videoPlayerManager?.prepareVideos(
+            storiesIndex,
+            storiesId
+        )
+        videoPlayerManager?.seekToVideo(
+            storiesIndex = storiesIndex,
+            slideIndex = slideIndex,
+            storiesId = storiesId
+        )
     }
 
-    fun nextVideo(nextSlideIndex: Int) {
-        seekToVideo(slideIndex = nextSlideIndex)
-    }
-
-    fun prevVideo(previousSlideIndex: Int) {
-        seekToVideo(slideIndex = previousSlideIndex)
+    fun setSlideVideo(slideIndex: Int) {
+        val storiesIndex = stateFlow.value.currentStoriesIndex
+        if (!isVideoNow(storiesIndex, slideIndex)) return
+        val storiesId = stateFlow.value.stories[storiesIndex].id
+        videoPlayerManager?.seekToVideo(
+            storiesIndex = storiesIndex,
+            slideIndex = slideIndex,
+            storiesId = storiesId
+        )
     }
 
     fun stopVideo() {
@@ -185,7 +197,7 @@ internal class StoriesViewModel(
                 }
             } else {
                 mutableStateFlow.value = stateFlow.value.slide(nextSlideIndex)
-                nextVideo(nextSlideIndex)
+                setSlideVideo(nextSlideIndex)
             }
         }
     }
@@ -202,7 +214,7 @@ internal class StoriesViewModel(
             } else {
                 val previousSlideIndex = currentSlideIndex - 1
                 mutableStateFlow.value = stateFlow.value.slide(previousSlideIndex)
-                prevVideo(previousSlideIndex)
+                setSlideVideo(previousSlideIndex)
             }
         }
     }
@@ -215,7 +227,7 @@ internal class StoriesViewModel(
                 newStoriesIndex = newStoriesIndex,
                 newSlideIndex = slideIndex
             )
-            seekToVideo(newStoriesIndex, slideIndex)
+            setStoriesVideo(newStoriesIndex, slideIndex)
         }
     }
 
@@ -227,7 +239,7 @@ internal class StoriesViewModel(
                 newStoriesIndex = newStoriesIndex,
                 newSlideIndex = slideIndex
             )
-            seekToVideo(newStoriesIndex, slideIndex)
+            setStoriesVideo(newStoriesIndex, slideIndex)
         }
     }
 
