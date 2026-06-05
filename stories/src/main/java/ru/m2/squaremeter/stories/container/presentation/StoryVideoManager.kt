@@ -12,6 +12,8 @@ interface StoryVideoManager {
 
     fun seekToVideo(storiesIndex: Int, slideIndex: Int, storiesId: String)
 
+    fun prepareVideos(storiesIndex: Int, storiesId: String)
+
     fun restartVideo(storiesIndex: Int)
 
     fun getVideoStoriesId(storiesIndex: Int, storiesId: String): UiVideo?
@@ -21,10 +23,6 @@ interface StoryVideoManager {
     fun resumeVideo(storiesIndex: Int)
 
     fun pauseVideo(storiesIndex: Int)
-
-    fun nextVideo(storiesIndex: Int, slideIndex: Int, storiesId: String)
-
-    fun prevVideo(storiesIndex: Int, slideIndex: Int, storiesId: String)
 
     fun stopVideo(storiesIndex: Int)
 
