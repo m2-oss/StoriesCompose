@@ -25,8 +25,8 @@ dependencyResolutionManagement {
   - to your build.gradle of the module of usage:
 ``` kotlin
 dependencies {
-   implementation("com.github.m2-oss.StoriesCompose:stories:1.3.10") // base functionality (mandatory)
-   implementation("com.github.m2-oss.StoriesCompose:stories-video:1.3.10") // video stories (optional)
+   implementation("com.github.m2-oss.StoriesCompose:stories:1.3.11") // base functionality (mandatory)
+   implementation("com.github.m2-oss.StoriesCompose:stories-video:1.3.11") // video stories (optional)
 }
 
 ```
