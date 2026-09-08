@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import ru.m2.squaremeter.stories.container.presentation.StoryVideoManager
 import ru.m2.squaremeter.stories.container.presentation.StoryVideoProvider
@@ -20,6 +21,16 @@ internal class ExoPlayerVideoProvider : StoryVideoProvider {
             playerPool = ExoPlayerPool(
                 List(3) {
                     ExoPlayer.Builder(context.applicationContext)
+                        .setLoadControl(
+                            DefaultLoadControl.Builder()
+                                .setBufferDurationsMs(
+                                    /* minBufferMs = */ 10_000,
+                                    /* maxBufferMs = */ 15_000,
+                                    /* bufferForPlaybackMs = */ 500,
+                                    /* bufferForPlaybackAfterRebufferMs = */ 3_000
+                                )
+                                .build()
+                        )
                         .setPauseAtEndOfMediaItems(true)
                         .setDeviceVolumeControlEnabled(true)
                         .build()
