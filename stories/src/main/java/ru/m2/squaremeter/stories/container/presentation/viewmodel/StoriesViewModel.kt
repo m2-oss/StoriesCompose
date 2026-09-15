@@ -10,8 +10,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,14 +33,14 @@ internal class StoriesViewModel(
     private val storiesShownRepository: StoriesShownRepository
 ) : ViewModel() {
 
-    private var initJob: Job = Job().apply { cancel() }
-    private var networkJob: Job = Job().apply { cancel() }
+    private var initJob: Job? = null
     private val mutableStateFlow =
         MutableStateFlow(StoriesState(playerPool = videoPlayerManager?.getPlayerPool()))
     val stateFlow: StateFlow<StoriesState> = mutableStateFlow.asStateFlow()
 
     fun init(data: UiStoriesData) {
-        viewModelScope.launch(CoroutineExceptionHandler { _, throwable ->
+        initJob?.cancel()
+        initJob = viewModelScope.launch(CoroutineExceptionHandler { _, throwable ->
             Log.e(LOG_TAG, "Failed loading shown stories", throwable)
             mutableStateFlow.value = stateFlow.value.ready(ReadyState.ERROR)
         }) {
@@ -73,32 +74,18 @@ internal class StoriesViewModel(
                 storiesId = data.storiesId
             )
             observeNetwork()
-        }.also { job ->
-            if (initJob.isActive) {
-                initJob.cancel()
-            }
-            initJob = job
         }
     }
 
-    private fun observeNetwork() {
+    private suspend fun observeNetwork() {
         connectivityObserver.isConnected
             .flowOn(Dispatchers.IO)
+            .drop(1)
             .onEach {
-                if (it) {
-                    restartVideo()
-                }
+                if (it) { restartVideo() }
             }
-            .catch {
-                Log.e(LOG_TAG, "Failed observing network state", it)
-            }
-            .launchIn(viewModelScope)
-            .also { job ->
-                if (networkJob.isActive) {
-                    networkJob.cancel()
-                }
-                networkJob = job
-            }
+            .catch { Log.e(LOG_TAG, "Failed observing network state", it) }
+            .collect()
     }
 
     fun restartVideo() {
