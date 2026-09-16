@@ -25,7 +25,8 @@ internal class PreviewViewModel(
     val stateFlow: StateFlow<PreviewState> = mutableStateFlow.asStateFlow()
 
     fun init(previewsData: List<UiStoriesPreviewData>) {
-        storiesShownRepository.observe()
+        currentJob?.cancel()
+        currentJob = storiesShownRepository.observe()
             .flowOn(Dispatchers.IO)
             .map { shownStories ->
                 previewsData.map { story ->
@@ -41,20 +42,8 @@ internal class PreviewViewModel(
                     .sortedBy { it.shown }
                     .toList()
             }
-            .onEach {
-                mutableStateFlow.value = stateFlow.value.previews(it)
-            }
-            .catch {
-                mutableStateFlow.value = stateFlow.value.previews(emptyList())
-            }
+            .onEach { mutableStateFlow.value = stateFlow.value.previews(it) }
+            .catch { mutableStateFlow.value = stateFlow.value.previews(emptyList()) }
             .launchIn(viewModelScope)
-            .also { job ->
-                currentJob?.let {
-                    if (it.isActive) {
-                        it.cancel()
-                    }
-                }
-                currentJob = job
-            }
     }
 }
